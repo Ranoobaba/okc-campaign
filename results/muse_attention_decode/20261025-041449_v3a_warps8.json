@@ -1,0 +1,137 @@
+{
+ "problem": "muse_attention_decode",
+ "gpu": "NVIDIA H200",
+ "torch": "2.14.1+cu130",
+ "tests": [],
+ "shapes": [
+  {
+   "load": "verify 1",
+   "case": "batch 1, ctx 80000, heads tp8, layer sliding, page 1, q_len 8, dist soft",
+   "weight": 46.0,
+   "base_us": 26.74,
+   "sub_us": 18.86,
+   "speedup": 1.4176,
+   "ci": [
+    0.9489,
+    1.4418
+   ],
+   "floor_us": 0.12,
+   "sub_min_us": 18.21,
+   "base_min_us": 26.21,
+   "fails": [],
+   "s": 28.8
+  },
+  {
+   "load": "verify 1",
+   "case": "batch 1, ctx 80000, heads tp8, layer full, page 1, q_len 8, dist coherent",
+   "weight": 16.0,
+   "base_us": 42.7,
+   "sub_us": 157.35,
+   "speedup": 0.2714,
+   "ci": [
+    0.2595,
+    0.2753
+   ],
+   "floor_us": 4.28,
+   "sub_min_us": 154.27,
+   "base_min_us": 41.89,
+   "fails": [],
+   "s": 100.7
+  },
+  {
+   "load": "verify 16",
+   "case": "batch 16, ctx 80000, heads tp8, layer sliding, page 1, q_len 8, spread agentic, dist soft",
+   "weight": 46.0,
+   "base_us": 34.56,
+   "sub_us": 27.16,
+   "speedup": 1.2727,
+   "ci": [
+    1.2549,
+    1.2784
+   ],
+   "floor_us": 1.86,
+   "sub_min_us": 26.72,
+   "base_min_us": 33.86,
+   "fails": [],
+   "s": 1.2
+  },
+  {
+   "load": "verify 16",
+   "case": "batch 16, ctx 80000, heads tp8, layer full, page 1, q_len 8, spread agentic, dist coherent",
+   "weight": 16.0,
+   "base_us": 216.05,
+   "sub_us": 580.67,
+   "speedup": 0.3721,
+   "ci": [
+    0.3699,
+    0.377
+   ],
+   "floor_us": 63.39,
+   "sub_min_us": 574.18,
+   "base_min_us": 212.45,
+   "fails": [],
+   "s": 2.2
+  },
+  {
+   "load": "verify 32",
+   "case": "batch 32, ctx 80000, heads tp8, layer sliding, page 1, q_len 8, spread agentic, dist soft",
+   "weight": 46.0,
+   "base_us": 40.78,
+   "sub_us": 44.86,
+   "speedup": 0.9091,
+   "ci": [
+    0.8956,
+    0.927
+   ],
+   "floor_us": 3.72,
+   "sub_min_us": 43.55,
+   "base_min_us": 40.29,
+   "fails": [],
+   "s": 0.9
+  },
+  {
+   "load": "verify 32",
+   "case": "batch 32, ctx 80000, heads tp8, layer full, page 1, q_len 8, spread agentic, dist coherent",
+   "weight": 16.0,
+   "base_us": 398.42,
+   "sub_us": 1104.12,
+   "speedup": 0.3608,
+   "ci": [
+    0.3602,
+    0.3622
+   ],
+   "floor_us": 126.78,
+   "sub_min_us": 1080.93,
+   "base_min_us": 396.48,
+   "fails": [],
+   "s": 2.6
+  }
+ ],
+ "ok": true,
+ "prepare_s": {
+  "baseline": 0.0,
+  "submission": 0.0
+ },
+ "graph_fixed_us": 3.14,
+ "loads": {
+  "verify 1": {
+   "base_us": 1913.1,
+   "sub_us": 3385.2,
+   "speedup": 0.5651
+  },
+  "verify 16": {
+   "base_us": 5046.5,
+   "sub_us": 10539.8,
+   "speedup": 0.4788
+  },
+  "verify 32": {
+   "base_us": 8250.7,
+   "sub_us": 19729.6,
+   "speedup": 0.4182
+  }
+ },
+ "speedup": 0.4837,
+ "total_s": 153.8,
+ "submission": "problems/muse_attention_decode/candidates/v3a_warps8.py",
+ "tag": "v3a_warps8"
+}
