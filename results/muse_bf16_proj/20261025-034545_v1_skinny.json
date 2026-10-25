@@ -1,0 +1,615 @@
+{
+ "problem": "muse_bf16_proj",
+ "gpu": "NVIDIA H200",
+ "torch": "2.14.1+cu130",
+ "tests": [
+  {
+   "case": "m 1, layer qkv_gate",
+   "ok": true,
+   "msg": "relative L2 error 0.000e+00 (worst row 0.000e+00)",
+   "s": 0.3
+  },
+  {
+   "case": "m 7, layer pooler",
+   "ok": true,
+   "msg": "relative L2 error 2.000e-04 (worst row 3.239e-04); 2 probe rows exact to 0.0e+00",
+   "s": 0.1
+  },
+  {
+   "case": "m 33, layer o",
+   "ok": true,
+   "msg": "relative L2 error 4.161e-05 (worst row 1.761e-04); 8 probe rows exact to 0.0e+00",
+   "s": 0.3
+  },
+  {
+   "case": "m 130, layer unpooler",
+   "ok": true,
+   "msg": "relative L2 error 1.432e-04 (worst row 3.066e-04); 21 probe rows exact to 0.0e+00",
+   "s": 0.4
+  },
+  {
+   "case": "m 5, layer unpooler",
+   "ok": true,
+   "msg": "relative L2 error 1.318e-04 (worst row 2.475e-04)",
+   "s": 0.0
+  },
+  {
+   "case": "m 8, layer router",
+   "ok": true,
+   "msg": "relative L2 error 3.207e-06 (worst row 3.627e-06); 2 probe rows exact to 2.7e-06",
+   "s": 0.0
+  },
+  {
+   "case": "m 9, layer router, dist outliers",
+   "ok": true,
+   "msg": "relative L2 error 3.488e-06 (worst row 3.843e-06); 1 probe rows exact to 2.3e-06",
+   "s": 0.0
+  },
+  {
+   "case": "m 512, layer qkv_gate, dist outliers",
+   "ok": true,
+   "msg": "relative L2 error 2.108e-04 (worst row 5.390e-04); 64 probe rows exact to 0.0e+00",
+   "s": 0.0
+  },
+  {
+   "case": "m 1000, layer unpooler, dist outliers",
+   "ok": true,
+   "msg": "relative L2 error 1.425e-04 (worst row 3.518e-04); 125 probe rows exact to 0.0e+00",
+   "s": 0.4
+  }
+ ],
+ "shapes": [
+  {
+   "load": "decode 1",
+   "case": "m 1, layer qkv_gate",
+   "weight": 62.0,
+   "base_us": 19.18,
+   "sub_us": 17.09,
+   "speedup": 1.1228,
+   "ci": [
+    1.1019,
+    1.143
+   ],
+   "floor_us": 7.87,
+   "sub_min_us": 16.38,
+   "base_min_us": 18.53,
+   "fails": [],
+   "s": 0.1
+  },
+  {
+   "load": "decode 1",
+   "case": "m 1, layer o",
+   "weight": 62.0,
+   "base_us": 9.73,
+   "sub_us": 8.88,
+   "speedup": 1.0957,
+   "ci": [
+    1.0736,
+    1.2208
+   ],
+   "floor_us": 3.5,
+   "sub_min_us": 8.45,
+   "base_min_us": 9.31,
+   "fails": [],
+   "s": 0.0
+  },
+  {
+   "load": "decode 1",
+   "case": "m 1, layer pooler",
+   "weight": 62.0,
+   "base_us": 28.18,
+   "sub_us": 24.9,
+   "speedup": 1.1314,
+   "ci": [
+    1.1128,
+    1.1694
+   ],
+   "floor_us": 13.99,
+   "sub_min_us": 24.54,
+   "base_min_us": 27.49,
+   "fails": [],
+   "s": 0.0
+  },
+  {
+   "load": "decode 1",
+   "case": "m 1, layer unpooler",
+   "weight": 62.0,
+   "base_us": 9.39,
+   "sub_us": 7.72,
+   "speedup": 1.2165,
+   "ci": [
+    1.1967,
+    1.377
+   ],
+   "floor_us": 1.75,
+   "sub_min_us": 7.46,
+   "base_min_us": 9.06,
+   "fails": [],
+   "s": 0.0
+  },
+  {
+   "load": "decode 1",
+   "case": "m 1, layer router",
+   "weight": 62.0,
+   "base_us": 13.49,
+   "sub_us": 10.46,
+   "speedup": 1.29,
+   "ci": [
+    1.1934,
+    1.3488
+   ],
+   "floor_us": 1.75,
+   "sub_min_us": 10.11,
+   "base_min_us": 13.09,
+   "fails": [],
+   "s": 0.1
+  },
+  {
+   "load": "decode 16",
+   "case": "m 16, layer qkv_gate",
+   "weight": 62.0,
+   "base_us": 18.91,
+   "sub_us": 21.97,
+   "speedup": 0.8609,
+   "ci": [
+    0.8257,
+    0.9121
+   ],
+   "floor_us": 7.93,
+   "sub_min_us": 21.7,
+   "base_min_us": 18.72,
+   "fails": [],
+   "s": 0.0
+  },
+  {
+   "load": "decode 16",
+   "case": "m 16, layer o",
+   "weight": 62.0,
+   "base_us": 9.65,
+   "sub_us": 9.18,
+   "speedup": 1.0509,
+   "ci": [
+    1.0051,
+    1.1225
+   ],
+   "floor_us": 3.56,
+   "sub_min_us": 8.8,
+   "base_min_us": 9.34,
+   "fails": [],
+   "s": 0.0
+  },
+  {
+   "load": "decode 16",
+   "case": "m 16, layer pooler",
+   "weight": 62.0,
+   "base_us": 28.61,
+   "sub_us": 27.91,
+   "speedup": 1.0251,
+   "ci": [
+    1.0128,
+    1.055
+   ],
+   "floor_us": 14.06,
+   "sub_min_us": 27.23,
+   "base_min_us": 27.58,
+   "fails": [],
+   "s": 0.0
+  },
+  {
+   "load": "decode 16",
+   "case": "m 16, layer unpooler",
+   "weight": 62.0,
+   "base_us": 25.34,
+   "sub_us": 25.18,
+   "speedup": 1.0064,
+   "ci": [
+    0.9697,
+    1.032
+   ],
+   "floor_us": 14.06,
+   "sub_min_us": 24.77,
+   "base_min_us": 24.99,
+   "fails": [],
+   "s": 0.0
+  },
+  {
+   "load": "decode 16",
+   "case": "m 16, layer router",
+   "weight": 62.0,
+   "base_us": 18.67,
+   "sub_us": 10.98,
+   "speedup": 1.701,
+   "ci": [
+    1.6676,
+    1.7899
+   ],
+   "floor_us": 1.81,
+   "sub_min_us": 10.27,
+   "base_min_us": 18.14,
+   "fails": [],
+   "s": 0.1
+  },
+  {
+   "load": "decode 32",
+   "case": "m 32, layer qkv_gate",
+   "weight": 62.0,
+   "base_us": 19.25,
+   "sub_us": 23.34,
+   "speedup": 0.8247,
+   "ci": [
+    0.7986,
+    0.8735
+   ],
+   "floor_us": 8.0,
+   "sub_min_us": 23.23,
+   "base_min_us": 18.78,
+   "fails": [],
+   "s": 0.0
+  },
+  {
+   "load": "decode 32",
+   "case": "m 32, layer o",
+   "weight": 62.0,
+   "base_us": 10.08,
+   "sub_us": 9.56,
+   "speedup": 1.0549,
+   "ci": [
+    0.951,
+    1.1014
+   ],
+   "floor_us": 3.62,
+   "sub_min_us": 9.31,
+   "base_min_us": 9.57,
+   "fails": [],
+   "s": 0.0
+  },
+  {
+   "load": "decode 32",
+   "case": "m 32, layer pooler",
+   "weight": 62.0,
+   "base_us": 29.52,
+   "sub_us": 28.17,
+   "speedup": 1.0478,
+   "ci": [
+    1.0353,
+    1.0625
+   ],
+   "floor_us": 14.14,
+   "sub_min_us": 27.84,
+   "base_min_us": 28.77,
+   "fails": [],
+   "s": 0.0
+  },
+  {
+   "load": "decode 32",
+   "case": "m 32, layer unpooler",
+   "weight": 62.0,
+   "base_us": 25.89,
+   "sub_us": 26.86,
+   "speedup": 0.9638,
+   "ci": [
+    0.9552,
+    0.9893
+   ],
+   "floor_us": 14.14,
+   "sub_min_us": 25.95,
+   "base_min_us": 25.25,
+   "fails": [],
+   "s": 0.0
+  },
+  {
+   "load": "decode 32",
+   "case": "m 32, layer router",
+   "weight": 62.0,
+   "base_us": 19.52,
+   "sub_us": 10.91,
+   "speedup": 1.7885,
+   "ci": [
+    1.6601,
+    1.7988
+   ],
+   "floor_us": 1.86,
+   "sub_min_us": 10.46,
+   "base_min_us": 18.53,
+   "fails": [],
+   "s": 0.0
+  },
+  {
+   "load": "verify 1",
+   "case": "m 8, layer qkv_gate",
+   "weight": 62.0,
+   "base_us": 19.36,
+   "sub_us": 22.88,
+   "speedup": 0.8461,
+   "ci": [
+    0.8328,
+    0.8672
+   ],
+   "floor_us": 7.9,
+   "sub_min_us": 22.53,
+   "base_min_us": 18.94,
+   "fails": [],
+   "s": 0.0
+  },
+  {
+   "load": "verify 1",
+   "case": "m 8, layer o",
+   "weight": 62.0,
+   "base_us": 9.94,
+   "sub_us": 9.66,
+   "speedup": 1.029,
+   "ci": [
+    1.0017,
+    1.1306
+   ],
+   "floor_us": 3.53,
+   "sub_min_us": 8.77,
+   "base_min_us": 9.34,
+   "fails": [],
+   "s": 0.0
+  },
+  {
+   "load": "verify 1",
+   "case": "m 8, layer pooler",
+   "weight": 62.0,
+   "base_us": 28.58,
+   "sub_us": 27.54,
+   "speedup": 1.0377,
+   "ci": [
+    1.013,
+    1.06
+   ],
+   "floor_us": 14.02,
+   "sub_min_us": 27.07,
+   "base_min_us": 27.68,
+   "fails": [],
+   "s": 0.0
+  },
+  {
+   "load": "verify 1",
+   "case": "m 8, layer unpooler",
+   "weight": 62.0,
+   "base_us": 9.36,
+   "sub_us": 10.84,
+   "speedup": 0.8632,
+   "ci": [
+    0.8353,
+    0.9346
+   ],
+   "floor_us": 1.76,
+   "sub_min_us": 10.53,
+   "base_min_us": 9.09,
+   "fails": [],
+   "s": 0.0
+  },
+  {
+   "load": "verify 1",
+   "case": "m 8, layer router",
+   "weight": 62.0,
+   "base_us": 29.55,
+   "sub_us": 11.09,
+   "speedup": 2.6652,
+   "ci": [
+    2.5137,
+    2.7463
+   ],
+   "floor_us": 1.78,
+   "sub_min_us": 10.69,
+   "base_min_us": 29.34,
+   "fails": [],
+   "s": 0.0
+  },
+  {
+   "load": "verify 16",
+   "case": "m 128, layer qkv_gate",
+   "weight": 62.0,
+   "base_us": 22.61,
+   "sub_us": 37.55,
+   "speedup": 0.602,
+   "ci": [
+    0.589,
+    0.6223
+   ],
+   "floor_us": 8.42,
+   "sub_min_us": 37.06,
+   "base_min_us": 22.34,
+   "fails": [],
+   "s": 0.1
+  },
+  {
+   "load": "verify 16",
+   "case": "m 128, layer o",
+   "weight": 62.0,
+   "base_us": 10.3,
+   "sub_us": 10.46,
+   "speedup": 0.9847,
+   "ci": [
+    0.9608,
+    1.0458
+   ],
+   "floor_us": 3.99,
+   "sub_min_us": 10.18,
+   "base_min_us": 10.05,
+   "fails": [],
+   "s": 0.0
+  },
+  {
+   "load": "verify 16",
+   "case": "m 128, layer pooler",
+   "weight": 62.0,
+   "base_us": 29.36,
+   "sub_us": 40.25,
+   "speedup": 0.7294,
+   "ci": [
+    0.7158,
+    0.7363
+   ],
+   "floor_us": 14.64,
+   "sub_min_us": 39.46,
+   "base_min_us": 28.67,
+   "fails": [],
+   "s": 0.0
+  },
+  {
+   "load": "verify 16",
+   "case": "m 128, layer unpooler",
+   "weight": 62.0,
+   "base_us": 26.99,
+   "sub_us": 28.58,
+   "speedup": 0.9445,
+   "ci": [
+    0.911,
+    0.9841
+   ],
+   "floor_us": 14.64,
+   "sub_min_us": 28.32,
+   "base_min_us": 26.85,
+   "fails": [],
+   "s": 0.0
+  },
+  {
+   "load": "verify 16",
+   "case": "m 128, layer router",
+   "weight": 62.0,
+   "base_us": 20.21,
+   "sub_us": 17.55,
+   "speedup": 1.1513,
+   "ci": [
+    1.1219,
+    1.1702
+   ],
+   "floor_us": 2.21,
+   "sub_min_us": 16.99,
+   "base_min_us": 19.58,
+   "fails": [],
+   "s": 0.0
+  },
+  {
+   "load": "verify 32",
+   "case": "m 256, layer qkv_gate",
+   "weight": 62.0,
+   "base_us": 26.66,
+   "sub_us": 37.64,
+   "speedup": 0.7081,
+   "ci": [
+    0.6951,
+    0.7261
+   ],
+   "floor_us": 9.77,
+   "sub_min_us": 37.41,
+   "base_min_us": 26.14,
+   "fails": [],
+   "s": 0.0
+  },
+  {
+   "load": "verify 32",
+   "case": "m 256, layer o",
+   "weight": 62.0,
+   "base_us": 11.57,
+   "sub_us": 13.28,
+   "speedup": 0.8712,
+   "ci": [
+    0.8485,
+    0.8856
+   ],
+   "floor_us": 4.48,
+   "sub_min_us": 12.96,
+   "base_min_us": 11.39,
+   "fails": [],
+   "s": 0.0
+  },
+  {
+   "load": "verify 32",
+   "case": "m 256, layer pooler",
+   "weight": 62.0,
+   "base_us": 35.65,
+   "sub_us": 41.81,
+   "speedup": 0.8526,
+   "ci": [
+    0.8479,
+    0.8754
+   ],
+   "floor_us": 17.37,
+   "sub_min_us": 41.06,
+   "base_min_us": 34.91,
+   "fails": [],
+   "s": 0.0
+  },
+  {
+   "load": "verify 32",
+   "case": "m 256, layer unpooler",
+   "weight": 62.0,
+   "base_us": 31.2,
+   "sub_us": 37.2,
+   "speedup": 0.8388,
+   "ci": [
+    0.819,
+    0.8613
+   ],
+   "floor_us": 17.37,
+   "sub_min_us": 36.83,
+   "base_min_us": 30.66,
+   "fails": [],
+   "s": 0.0
+  },
+  {
+   "load": "verify 32",
+   "case": "m 256, layer router",
+   "weight": 62.0,
+   "base_us": 21.41,
+   "sub_us": 20.04,
+   "speedup": 1.0684,
+   "ci": [
+    1.0463,
+    1.0766
+   ],
+   "floor_us": 2.68,
+   "sub_min_us": 19.81,
+   "base_min_us": 20.99,
+   "fails": [],
+   "s": 0.0
+  }
+ ],
+ "ok": true,
+ "prepare_s": {
+  "baseline": 0.0,
+  "submission": 160.3
+ },
+ "graph_fixed_us": 3.23,
+ "loads": {
+  "decode 1": {
+   "base_us": 4958.0,
+   "sub_us": 4280.8,
+   "speedup": 1.1582
+  },
+  "decode 16": {
+   "base_us": 6273.4,
+   "sub_us": 5903.5,
+   "speedup": 1.0627
+  },
+  "decode 32": {
+   "base_us": 6463.9,
+   "sub_us": 6128.3,
+   "speedup": 1.0548
+  },
+  "verify 1": {
+   "base_us": 6000.6,
+   "sub_us": 5084.3,
+   "speedup": 1.1802
+  },
+  "verify 16": {
+   "base_us": 6787.3,
+   "sub_us": 8332.7,
+   "speedup": 0.8145
+  },
+  "verify 32": {
+   "base_us": 7841.8,
+   "sub_us": 9297.9,
+   "speedup": 0.8434
+  }
+ },
+ "speedup": 1.0086,
+ "total_s": 179.2,
+ "submission": "problems/muse_bf16_proj/submission.py",
+ "tag": "v1_skinny"
+}

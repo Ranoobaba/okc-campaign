@@ -117,10 +117,18 @@ def _skinny(x_ptr, w_ptr, w2_ptr, out_ptr, M, N, K, stride_xm, stride_wn, stride
 
 
 def _launch(x, w, w2, n, cfg):
-    """One projection with config cfg: kind 'gemv' or 'dot'. Returns the output tensor."""
+    """One projection with config cfg: kind 'gemv', 'dot' or 'torch'. Returns the output tensor."""
     m, k = x.shape
     f32 = w2 is not None
     out_dtype = torch.float32 if f32 else torch.bfloat16
+    if cfg["kind"] == "torch":
+        if not f32:
+            return torch.matmul(x, w.T)
+        if m <= 8:
+            return torch.nn.functional.linear(x.float(), cfg["router"])
+        acc = torch.mm(x, cfg["hi_t"], out_dtype=torch.float32)
+        acc += torch.mm(x, cfg["lo_t"], out_dtype=torch.float32)
+        return acc
     if cfg["kind"] == "gemv":
         out = torch.empty((1, n), dtype=out_dtype, device=x.device)
         grid = (triton.cdiv(n, cfg["BLOCK_N"]),)
@@ -154,16 +162,18 @@ def _candidates(layer, m, n, k):
                         continue
                     cands.append({"kind": "gemv", "BLOCK_N": bn, "BLOCK_K": bk, "warps": warps, "stages": 3})
     bm = max(16, triton.next_power_of_2(min(m, 128)))
-    bks = (64, 128, 256) if bm <= 32 else (64, 128)
-    bns = (16, 32, 64, 128) if bm <= 32 else (64, 128)
-    for bn in bns:
-        if bn > n:
-            continue
-        for bk in bks:
-            for warps in ((4, 8) if bm <= 32 else (4, 8)):
-                for stages in (3, 4):
-                    cands.append({"kind": "dot", "BLOCK_M": bm, "BLOCK_N": bn, "BLOCK_K": bk, "SPLIT_K": 1,
-                                  "warps": warps, "stages": stages})
+    bms = (bm,) if bm <= 32 else tuple(sorted({64, bm}))
+    for bm in bms:
+        bks = (64, 128, 256) if bm <= 32 else (64, 128)
+        bns = (16, 32, 64, 128) if bm <= 32 else (64, 128)
+        for bn in bns:
+            if bn > n:
+                continue
+            for bk in bks:
+                for warps in (4, 8):
+                    for stages in (3, 4):
+                        cands.append({"kind": "dot", "BLOCK_M": bm, "BLOCK_N": bn, "BLOCK_K": bk, "SPLIT_K": 1,
+                                      "warps": warps, "stages": stages})
     blocks = (n // 16) * triton.cdiv(m, bm)
     if blocks < 264:  # too few blocks to pull bandwidth: try split-K
         for split in (2, 4, 8):
@@ -218,6 +228,8 @@ def prepare(weights: Weights):
     lo = (router - hi.float()).to(torch.bfloat16)
     state["router_hi"] = hi.contiguous()
     state["router_lo"] = lo.contiguous()
+    state["router_hi_t"] = hi.t().contiguous()
+    state["router_lo_t"] = lo.t().contiguous()
     state["router"] = router
     cfgs = {}
     flush = torch.empty(64 << 20, dtype=torch.float32, device=dev)  # 256 MB, bigger than L2
@@ -230,7 +242,11 @@ def prepare(weights: Weights):
         for m in SCORED_M:
             n = 1024 if layer == "unpooler" and m <= 8 else w.shape[0]
             x = torch.randn((m, w.shape[1]), generator=gen, device=dev).to(torch.bfloat16)
-            best = (float("inf"), _default_cfg(layer, m, n))
+            torch_cfg = {"kind": "torch"}
+            if layer == "router":
+                torch_cfg.update(router=state["router"], hi_t=state["router_hi_t"], lo_t=state["router_lo_t"])
+            t_torch = _time_graph(lambda: _launch(x, w[:n], w2[:n] if w2 is not None else None, n, torch_cfg), flush)
+            best = (t_torch * 0.97, torch_cfg)  # a Triton config must beat cuBLAS by 3% to be picked
             for cfg in _candidates(layer, m, n, w.shape[1]):
                 if time.time() - t_start > 240:  # stay well inside prepare's 300 s
                     break
@@ -263,6 +279,8 @@ def _pick(cfgs, layer, m, n):
         cfg = cfgs.get((layer, bucket), _default_cfg(layer, m, n))
         if cfg["kind"] == "gemv" and m != 1:
             cfg = _default_cfg(layer, m, n)
+        if cfg["kind"] == "torch" and layer == "router":
+            cfg = dict(cfg, router=None)  # filled below
         if cfg["kind"] == "dot" and cfg["BLOCK_M"] < min(m, 128):
             cfg = dict(cfg, BLOCK_M=max(16, triton.next_power_of_2(min(m, 128))))
     return cfg
@@ -275,6 +293,8 @@ def kernel_fn(data: Inputs, state) -> torch.Tensor:
     m = x.shape[0]
     w, w2 = _weights(state, layer)
     cfg = _pick(state["cfgs"], layer, m, n)
+    if cfg["kind"] == "torch" and layer == "router" and cfg.get("router") is None:
+        cfg = dict(cfg, router=state["router"], hi_t=state["router_hi_t"], lo_t=state["router_lo_t"])
     if x.stride(1) != 1:
         x = x.contiguous()
     return _launch(x, w[:n], w2[:n] if w2 is not None else None, n, cfg)

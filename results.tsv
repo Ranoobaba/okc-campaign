@@ -1,1 +1,2 @@
 date	problem	tag	ok	speedup	note
+2026-10-25T04:05	muse_bf16_proj	v1_skinny	ok	1.0086	router 1.3-2.7x, m=1 1.1-1.3x, but m>=8 dot path loses to cuBLAS (0.6-0.86); discard as-is
