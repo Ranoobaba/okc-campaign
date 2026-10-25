@@ -24,7 +24,8 @@ def build(problem):
     out = [f"# okc: problem={problem}\n",
            '"""Whole decoder layer: our projections, attention and MoE kernels with SGLang\'s fused\n'
            'norm/residual/routing modules in between (assembled by harness/assemble_layer.py)."""\n',
-           "from typing import TypedDict\nimport torch\nimport torch.nn.functional as F\nimport triton\nimport triton.language as tl\n"]
+           "from typing import TypedDict\nimport torch\nimport torch.nn.functional as F\nimport triton\nimport triton.language as tl\n"
+           "Weights = Config = Inputs = dict  # the components' TypedDicts, as plain annotations here\n"]
     out.append(component(P / "muse_bf16_proj/submission.py", "proj"))
     out.append(component(P / "muse_attention_decode/submission.py", "attn"))
     out.append(component(P / "muse_moe_w4a16/submission.py", "moe"))

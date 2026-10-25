@@ -6,6 +6,7 @@ import torch
 import torch.nn.functional as F
 import triton
 import triton.language as tl
+Weights = Config = Inputs = dict  # the components' TypedDicts, as plain annotations here
 
 # ====================== component: proj ======================
 
