@@ -102,3 +102,6 @@ Durable facts across sessions. Read before designing anything.
 - v7 (one launch, unrolled merge): sliding b1 12.8 us = identical to the 3-launch v6. The time is ~6 dependent
   global round trips, not launch count. Next: no split on sliding layers (one program per (b, h) streams the whole
   2048-key window with pipelined tile loads and writes the output itself): 4 round trips.
+- ncu on the proj CUDA skinny kernel (m 16 qkv_gate): 26.5 us, DRAM 31.6% (1.5 TB/s), 144 blocks = 0.36 waves,
+  achieved occupancy 7%, 1.1 active warps per scheduler. Same disease as the MoE kernel: too few warps and bytes
+  in flight. For a 16-row-per-block streaming GEMM the fix is many K-split warps per block (16 warps, ~200 KB smem).
