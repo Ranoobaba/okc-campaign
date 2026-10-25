@@ -64,3 +64,15 @@ Durable facts across sessions. Read before designing anything.
   qkv_gate gemv is 10.7 us of GPU time but times at ~16.7 us). So on tiny shapes, launch count is the lever:
   one kernel per shape, and no zero-fill or cast launches.
 - prepare() took 134 s on the judge (our tuning loop); keep it under ~200 s.
+
+## Attention decode findings (2026-10-25 07:20)
+
+- Decode-1 sliding (2048 keys) costs ~15.5 us in our 3-launch kernel regardless of BLOCK_N (32/64/128), num_stages
+  (1/2/3), split count (x4) or masking: fixed per-launch latency dominates, not tile work. Baseline = 5 launches
+  = 24 us. The lever is launch count: one launch (in-kernel combine via an atomic counter) is the target.
+- Fusing prep into the attention launch (v4) saved nothing on its own at 3 -> 2 launches for decode shapes and
+  slowed the 64-row verify blocks (q-norm/RoPE recomputed per program, register pressure). Fuse only for 16-row blocks.
+- 64-row (q_len 8) programs over full context are 3x slower than FA3; more warps (8) made it worse, per-token
+  row split is 8x KV re-read. Still unexplained; candidates: fp8 trans layout conversions per tile, exp cost,
+  or latency chains with too few programs per SM. Needs an ncu pass.
+- FP8 x FP8 QK dot (queries rounded to E4M3) is accepted by the checker with ~4 to 7% error against a 11 to 15% bound.

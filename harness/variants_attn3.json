@@ -1,0 +1,1 @@
+{"v5_onelaunch": [], "v5_split4x": [["    target = max(1, -(-300 // (batch * hkv)))\n", "    target = max(1, -(-1200 // (batch * hkv)))\n"]], "v5_split_quarter": [["    target = max(1, -(-300 // (batch * hkv)))\n", "    target = max(1, -(-80 // (batch * hkv)))\n"]]}
