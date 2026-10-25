@@ -166,11 +166,10 @@ def kernel_fn(data, state):
     split_router = T > SLICED_MAX_TOKENS
     ffn_input, stream, _ = state["attn_boundary"](data["stream"], attn_output, branch_dtype=torch.bfloat16,
                                                   router_dtype=None)
-    if T <= 32:
-        pooled, logits = _dual_proj(state, ffn_input)  # router + pooler in one launch
-    else:
-        logits = _proj(state, ffn_input, "router", N_EXPERTS)
-        pooled = _proj(state, ffn_input, "pooler", D_EXPERT)
+    # (A fused router+pooler launch was measured at 1.248 vs 1.260 for separate launches: the Triton pooler
+    # path loses more than the saved launch; kept separate.)
+    logits = _proj(state, ffn_input, "router", N_EXPERTS)
+    pooled = _proj(state, ffn_input, "pooler", D_EXPERT)
     topk_weights, topk_ids = state["routing"](None, logits, TOP_K, True)
     # MoE block.
     expert_input = state["pre_expert_norm"](pooled)

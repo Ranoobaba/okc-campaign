@@ -63,3 +63,4 @@ date	problem	tag	ok	speedup	note
 2026-10-25T10:10	muse_decode_layer	v8 REAL JUDGE	ok	1.2312	job 9ca985e27ac5493c CI [1.213,1.250]; board #499; overall #554/1106
 2026-10-25T09:40	muse_attention_decode	sweep micro_attn7	ok	micro	sliding at batch>=16: 600 programs helps b32 (decode 1.56 vs 1.49, verify 1.35 vs 1.24), 1200 hurts; b16 flat
 2026-10-25T09:45	muse_attention_decode	v14_sliding600	ok	1.3042	KEEP as working file (b32 sliding 1.72x from 1.56; geomean = v13; not resubmitted)
+2026-10-25T10:00	muse_decode_layer	v9_dualproj	ok	1.2477	DISCARD: router+pooler fused launch 1.2477 vs v8 1.2603 (Triton dot pooler slower than cuBLAS at m 16/32 offsets the saved launch); reverted
