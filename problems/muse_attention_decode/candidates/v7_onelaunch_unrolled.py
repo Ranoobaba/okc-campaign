@@ -181,29 +181,6 @@ def _attn(q_ptr, kc_ptr, vc_ptr, table_ptr, seqlens_ptr, k_scale_ptr, v_scale_pt
     tl.store(pm_ptr + pbase + r, m_i)
     tl.store(pl_ptr + pbase + r, l_i)
     tl.store(po_ptr + (pbase + r)[:, None] * D + d[None, :], acc)
-    # The last split to finish for this (request, kv head) merges every split and writes the output.
-    tl.debug_barrier()
-    prev = tl.atomic_add(counter_ptr + b * HKV + h, 1, sem="acq_rel", scope="gpu")
-    if prev == NSPLIT - 1:
-        cbase = ((b * HKV + h) * NSPLIT).to(tl.int64) * BLOCK_Q
-        m = tl.full((BLOCK_Q,), NEG_INF, tl.float32)
-        for t in tl.static_range(NSPLIT):
-            m = tl.maximum(m, tl.load(pm_ptr + cbase + t * BLOCK_Q + r, cache_modifier=".cg"))
-        m_safe = tl.where(m == NEG_INF, 0.0, m)
-        l = tl.zeros((BLOCK_Q,), tl.float32)
-        o = tl.zeros((BLOCK_Q, D), tl.float32)
-        for t in tl.static_range(NSPLIT):
-            ms = tl.load(pm_ptr + cbase + t * BLOCK_Q + r, cache_modifier=".cg")
-            w = tl.exp(ms - m_safe)
-            l += w * tl.load(pl_ptr + cbase + t * BLOCK_Q + r, cache_modifier=".cg")
-            o += w[:, None] * tl.load(po_ptr + (cbase + t * BLOCK_Q + r)[:, None] * D + d[None, :], cache_modifier=".cg")
-        o = o / tl.maximum(l, 1e-30)[:, None]
-        o = o * tl.rsqrt(tl.sum(o * o, 1) / D + eps)[:, None]
-        head = h * GROUP + g
-        gate = tl.load(qkv_ptr + tok[:, None] * ROW + (HQ + 2 * HKV) * D + head[:, None] * D + d[None, :],
-                       mask=rmask[:, None], other=0.0).to(tl.float32)
-        o = o * tl.sigmoid(gate)
-        tl.store(out_ptr + tok[:, None] * (HQ * D) + head[:, None] * D + d[None, :], o.to(tl.bfloat16), mask=rmask[:, None])
 
 
 @triton.jit
