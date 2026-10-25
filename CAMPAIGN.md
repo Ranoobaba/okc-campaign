@@ -101,3 +101,6 @@ Cheap remaining items: layer launch cuts, Marlin block-size tuning per shape, re
 - 07:20 PDT: moe v3c (Marlin 16-row tiles above 8 tokens) REAL x1.2627 [1.244, 1.282] -> #624. Overall #652/1098.
   Found by a 5-variant microbench of Marlin knobs: SGLang's block-size heuristic picks 64 at bs 128/256 where 16 is
   1.25 to 1.40x faster. Layer v6 with it running on the replica.
+- 07:50 PDT: decode_layer v6 REAL x1.2196 [1.201, 1.238]. Overall #569/1098 (from #1019 at the first entry).
+  Marlin sweep 3: block 8 everywhere loses 30% at bs 128/256; v3c rule stands. All cheap knobs are now exhausted;
+  the remaining gaps (proj 1.61, attention 2.91, moe 2.52, layer 2.29 at #1) need CUDA-level rewrites.
