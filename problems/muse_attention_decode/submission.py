@@ -425,7 +425,7 @@ def _plan(batch, hkv, max_len, window, L, block_n):
     span = min(max_len, window + L) if window else max_len
     # Full-context layers at batch >= 8: 4x more programs hide the per-tile gather latency (measured +10 to 17%);
     # at small batch the merge over hundreds of splits costs more than it saves.
-    programs = 2400 if (not window and batch >= 8) else 300
+    programs = 2400 if (not window and batch >= 8) else (600 if batch >= 32 else 300)
     target = min(128, max(1, -(-programs // (batch * hkv))))
     chunk = -(-span // target)
     chunk = max(block_n, -(-chunk // block_n) * block_n)
