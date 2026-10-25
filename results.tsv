@@ -60,3 +60,4 @@ date	problem	tag	ok	speedup	note
 2026-10-25T09:40	muse_attention_decode	sweep micro_attn6	ok	micro	our 64-row kernel at 2400/4800 programs still 0.36-0.92x of FA3 on verify full shapes; FA3 fallback stays
 2026-10-25T09:55	muse_attention_decode	v13 REAL JUDGE	ok	1.2816	job 4a319b95232941f2 CI [1.262,1.305]; replica 1.3034
 2026-10-25T09:55	muse_decode_layer	v8_attn13	ok	1.2603	KEEP: layer with attention v13; 13/13 tests; submitting
+2026-10-25T10:10	muse_decode_layer	v8 REAL JUDGE	ok	1.2312	job 9ca985e27ac5493c CI [1.213,1.250]; board #499; overall #554/1106

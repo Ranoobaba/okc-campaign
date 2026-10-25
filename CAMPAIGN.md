@@ -107,3 +107,5 @@ Cheap remaining items: layer launch cuts, Marlin block-size tuning per shape, re
 - 08:40 PDT: attention v12 (4x splits on full layers at batch >= 8) REAL x1.2464 [1.228, 1.272] (from 1.181).
 - 09:55 PDT: attention v13 (2400 programs on full layers at batch >= 8) REAL x1.2816 [1.262, 1.305]. Layer v8 replica
   x1.2603, submitting. Our 64-row kernel stays behind FA3 on verify full shapes even with 2400 programs (0.36 to 0.92x).
+- 10:10 PDT: decode_layer v8 REAL x1.2312 (#499). Board: proj #849 1.107, attention #541 1.282, moe #634 1.263,
+  layer #499 1.231. Overall #554/1106 (started the day at #1019 after the first entry).
