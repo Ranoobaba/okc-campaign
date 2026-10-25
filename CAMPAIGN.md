@@ -105,3 +105,5 @@ Cheap remaining items: layer launch cuts, Marlin block-size tuning per shape, re
   Marlin sweep 3: block 8 everywhere loses 30% at bs 128/256; v3c rule stands. All cheap knobs are now exhausted;
   the remaining gaps (proj 1.61, attention 2.91, moe 2.52, layer 2.29 at #1) need CUDA-level rewrites.
 - 08:40 PDT: attention v12 (4x splits on full layers at batch >= 8) REAL x1.2464 [1.228, 1.272] (from 1.181).
+- 09:55 PDT: attention v13 (2400 programs on full layers at batch >= 8) REAL x1.2816 [1.262, 1.305]. Layer v8 replica
+  x1.2603, submitting. Our 64-row kernel stays behind FA3 on verify full shapes even with 2400 programs (0.36 to 0.92x).
