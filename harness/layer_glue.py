@@ -19,6 +19,66 @@ def _local_ids_kernel(ids_ptr, start_ptr, out_ptr, n, N_EXPERTS: tl.constexpr, L
     tl.store(out_ptr + offs, loc.to(tl.int32), mask=mask)
 
 
+@triton.jit
+def _dual_proj_kernel(x_ptr, wp_ptr, whi_ptr, wlo_ptr, outp_ptr, outr_ptr, M, NP, NR, K,
+                      stride_xm, stride_wp, stride_wr, stride_op, stride_or,
+                      BLOCK_M: tl.constexpr, BLOCK_N: tl.constexpr, BLOCK_K: tl.constexpr, SPLIT_R: tl.constexpr):
+    """Pooler GEMM (BF16 out) and router hi/lo GEMM (FP32 atomics, K split SPLIT_R ways) in one launch:
+    programs [0, NP/BN) are pooler tiles, the rest are router tiles x K slices. Both read the same x."""
+    pid = tl.program_id(0)
+    pid_m = tl.program_id(1)
+    offs_m = pid_m * BLOCK_M + tl.arange(0, BLOCK_M)
+    offs_k = tl.arange(0, BLOCK_K)
+    m_mask = offs_m < M
+    n_pool_tiles = NP // BLOCK_N
+    acc = tl.zeros((BLOCK_M, BLOCK_N), dtype=tl.float32)
+    if pid < n_pool_tiles:
+        offs_n = pid * BLOCK_N + tl.arange(0, BLOCK_N)
+        x_ptrs = x_ptr + offs_m[:, None] * stride_xm + offs_k[None, :]
+        w_ptrs = wp_ptr + offs_n[:, None] * stride_wp + offs_k[None, :]
+        for _ in range(0, K, BLOCK_K):
+            x = tl.load(x_ptrs, mask=m_mask[:, None], other=0.0)
+            w = tl.load(w_ptrs)
+            acc = tl.dot(x, tl.trans(w), acc)
+            x_ptrs += BLOCK_K
+            w_ptrs += BLOCK_K
+        tl.store(outp_ptr + offs_m[:, None] * stride_op + offs_n[None, :], acc.to(tl.bfloat16), mask=m_mask[:, None])
+    else:
+        r = pid - n_pool_tiles
+        tile = r // SPLIT_R
+        ks = r % SPLIT_R
+        k_len = K // SPLIT_R
+        offs_n = tile * BLOCK_N + tl.arange(0, BLOCK_N)
+        x_ptrs = x_ptr + offs_m[:, None] * stride_xm + (ks * k_len + offs_k)[None, :]
+        hi_ptrs = whi_ptr + offs_n[:, None] * stride_wr + (ks * k_len + offs_k)[None, :]
+        lo_ptrs = wlo_ptr + offs_n[:, None] * stride_wr + (ks * k_len + offs_k)[None, :]
+        for _ in range(0, k_len, BLOCK_K):
+            x = tl.load(x_ptrs, mask=m_mask[:, None], other=0.0)
+            acc = tl.dot(x, tl.trans(tl.load(hi_ptrs)), acc)
+            acc = tl.dot(x, tl.trans(tl.load(lo_ptrs)), acc)
+            x_ptrs += BLOCK_K
+            hi_ptrs += BLOCK_K
+            lo_ptrs += BLOCK_K
+        tl.atomic_add(outr_ptr + offs_m[:, None] * stride_or + offs_n[None, :], acc, mask=m_mask[:, None], sem="relaxed")
+
+
+def _dual_proj(state, x):
+    """ffn_input [T, 8192] -> (pooler output bf16 [T, 4096], router logits fp32 [T, 256]) in one launch (T <= 32)."""
+    T, K = x.shape
+    ps = state["proj"]
+    wp = ps["pooler"]
+    whi, wlo = ps["router_hi"], ps["router_lo"]
+    outp = torch.empty((T, D_EXPERT), dtype=torch.bfloat16, device=x.device)
+    outr = torch.zeros((T, N_EXPERTS), dtype=torch.float32, device=x.device)
+    bm = 16 if T <= 16 else 32
+    bn, bk, split_r = 32, 128, 4
+    grid = (D_EXPERT // bn + (N_EXPERTS // bn) * split_r, triton.cdiv(T, bm))
+    _dual_proj_kernel[grid](x, wp, whi, wlo, outp, outr, T, D_EXPERT, N_EXPERTS, K,
+                            x.stride(0), wp.stride(0), whi.stride(0), outp.stride(0), outr.stride(0),
+                            BLOCK_M=bm, BLOCK_N=bn, BLOCK_K=bk, SPLIT_R=split_r, num_warps=4, num_stages=3)
+    return outp, outr
+
+
 HIDDEN = 8192
 D_EXPERT = 4096
 LOCAL_EXPERTS = 32
@@ -106,10 +166,14 @@ def kernel_fn(data, state):
     split_router = T > SLICED_MAX_TOKENS
     ffn_input, stream, _ = state["attn_boundary"](data["stream"], attn_output, branch_dtype=torch.bfloat16,
                                                   router_dtype=None)
-    logits = _proj(state, ffn_input, "router", N_EXPERTS)
+    if T <= 32:
+        pooled, logits = _dual_proj(state, ffn_input)  # router + pooler in one launch
+    else:
+        logits = _proj(state, ffn_input, "router", N_EXPERTS)
+        pooled = _proj(state, ffn_input, "pooler", D_EXPERT)
     topk_weights, topk_ids = state["routing"](None, logits, TOP_K, True)
     # MoE block.
-    expert_input = state["pre_expert_norm"](_proj(state, ffn_input, "pooler", D_EXPERT))
+    expert_input = state["pre_expert_norm"](pooled)
     local_ids = torch.empty((T, TOP_K), dtype=torch.int32, device=x.device)
     n_ids = T * TOP_K
     _local_ids_kernel[(triton.cdiv(n_ids, 1024),)](topk_ids, data["local_start"], local_ids, n_ids,
