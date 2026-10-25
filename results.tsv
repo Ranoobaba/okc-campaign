@@ -45,3 +45,4 @@ date	problem	tag	ok	speedup	note
 2026-10-25T10:00	muse_attention_decode	v11_tok_small	ok	1.2267	KEEP (Pareto: verify-1 sliding 1.43->1.83, no regressions; +0.5% geomean, not resubmitted)
 2026-10-25T06:45	muse_decode_layer	v5_attn11	ok	1.1717	KEEP as working file (within noise of v4 1.1675; not resubmitted)
 2026-10-25T06:55	muse_moe_w4a16	sweep micro_moe2	ok	micro	Marlin block 16 everywhere: bs128 1.25x, bs256 1.40x (SGLang heuristic picks 64 there); bs32 unchanged; atomic_all neutral
+2026-10-25T07:05	muse_moe_w4a16	v3c_block16	ok	1.2715	KEEP: Marlin 16-row tiles above 8 tokens: bs128 1.29x, bs256 1.32x; 5/5 tests; submitting
