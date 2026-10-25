@@ -34,3 +34,19 @@ Durable facts across sessions. Read before designing anything.
   routing check (ties within 0.05 allowed). Baseline uses a side stream for the router.
 - prefill_layer: same layer at q_len 753 / 16384; grouped NVFP4 GEMM dominates (compute-bound);
   separate board, no overall credit.
+
+## Judge replica calibration (2026-10-25 03:40)
+
+- Baseline vs itself: proj x1.0036, moe x1.0012. Per-shape noise about +-2 to 3% at 10 reps; use >=20 reps
+  for keep decisions under 5%. The replica is trustworthy.
+- proj: SGLang/cuBLAS vs HBM floor at m=1: qkv_gate 18.3 vs 7.9 us, o 9.7 vs 3.5, pooler 29 vs 14,
+  unpooler(1024 rows) 9.4 vs 1.7, router 13.0 vs 1.8 (fp32 F.linear), router hi/lo at m=8: 29.4 us (!).
+  m=128/256 cuBLAS is only 1.5 to 2x off. Biggest single wins: router at every m, unpooler slice, o.
+- moe: Marlin baseline bs1 85 us, bs8 161, bs16 190, bs32 225, bs128 446, bs256 631 us. Weight-read floor
+  with the real routing (TASK.md) 11/37/53/71/101/109 us. Everything is 4 to 8x off roofline. #1 on the
+  board (2.52x) is still ~3x off the floor. This is the largest lever on the overall board.
+- Image has deep_gemm (muse fork) with nvfp4_mega_moe, m_grouped_fp4_gemm_nt_contiguous/_masked,
+  fp8_fp4 variants, cublaslt_nvfp4_gemm_nt; flashinfer 0.7 with cute_dsl_fused_moe_nvfp4, trtllm_fp4_block_scale_moe
+  (sm100 only, likely useless on H200), grouped_mm_fp4; sgl_kernel with cutlass_w4a8_moe_mm, ggml_moe_a8_vec
+  (GEMV-style MoE for small M). Check which of these run on sm_90 before writing custom kernels.
+- attention harness bug fixed (check must read the cache the kernel wrote). Recalibration in flight.
