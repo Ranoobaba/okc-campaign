@@ -813,7 +813,7 @@ def _experts_marlin(x, local_ids, topk_weights, bank, ws, top_k):
     count = bank["count"]
     # Measured on H200: Marlin's 16-row M tiles beat its 32/48/64 choices at every batch above 8 (bs 128: 1.25x,
     # bs 256: 1.40x over SGLang's heuristic); 8 stays best at bs <= 8.
-    block_size_m = 8 if num_tokens <= 8 else 16
+    block_size_m = 8 if num_tokens <= 8 else (16 if num_tokens <= 512 else 64)  # 16-row tiles lose above ~512 tokens (prefill)
     sorted_ids, block_experts, n_padded = moe_align_block_size(local_ids, block_size_m, count)
     cache2 = torch.empty((num_tokens * top_k, size_n), device=x.device, dtype=x.dtype)
     cache13 = torch.empty((num_tokens * top_k * max(gemm1_n, size_k),), device=x.device, dtype=x.dtype)

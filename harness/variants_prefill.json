@@ -1,0 +1,5 @@
+{
+ "rule16": [],
+ "block64_big": [["    block_size_m = 8 if num_tokens <= 8 else 16", "    block_size_m = 8 if num_tokens <= 8 else (16 if num_tokens <= 512 else 64)"]],
+ "block32_big": [["    block_size_m = 8 if num_tokens <= 8 else 16", "    block_size_m = 8 if num_tokens <= 8 else (16 if num_tokens <= 512 else 32)"]]
+}

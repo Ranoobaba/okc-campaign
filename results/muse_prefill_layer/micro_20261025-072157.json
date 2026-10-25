@@ -1,0 +1,98 @@
+{
+ "rule16": {
+  "turn 1 | batch 1, ctx 80000, layer sliding, q_len 753, page 1, dist soft": {
+   "us": 1197.5359916687012,
+   "speedup": 0.7915319650475927,
+   "check": "OK update relative L2 error 5.295e-02 (worst row 1.200e-01) [bound 0.120]; attention input relative L2 error 3.428e-02 (wor"
+  },
+  "turn 1 | batch 1, ctx 80000, layer full, q_len 753, page 1, dist soft": {
+   "us": 1560.9440207481384,
+   "speedup": 0.8436023040064273,
+   "check": "OK update relative L2 error 6.235e-02 (worst row 1.046e-01) [bound 0.150]; attention input relative L2 error 3.987e-02 (wor"
+  },
+  "first turn | batch 1, ctx 0, layer full, q_len 16384, page 1, dist soft": {
+   "us": 22362.319946289062,
+   "speedup": 0.6430703173990149,
+   "check": "OK update relative L2 error 2.221e-02 (worst row 7.579e-02) [bound 0.044]; attention input relative L2 error 1.454e-02 (wor"
+  },
+  "first turn | batch 1, ctx 32768, layer sliding, q_len 16384, page 1, dist soft": {
+   "us": 23511.536598205566,
+   "speedup": 0.6264328871935426,
+   "check": "OK update relative L2 error 3.526e-02 (worst row 1.078e-01) [bound 0.070]; attention input relative L2 error 2.302e-02 (wor"
+  },
+  "first turn | batch 1, ctx 32768, layer full, q_len 16384, page 1, dist soft": {
+   "us": 27841.008186340332,
+   "speedup": 0.6670367387328093,
+   "check": "OK update relative L2 error 5.552e-02 (worst row 1.209e-01) [bound 0.133]; attention input relative L2 error 3.549e-02 (wor"
+  },
+  "first turn | batch 1, ctx 65536, layer full, q_len 16384, page 1, dist soft": {
+   "us": 32629.857063293457,
+   "speedup": 0.7168791302381989,
+   "check": "OK update relative L2 error 5.829e-02 (worst row 1.295e-01) [bound 0.141]; attention input relative L2 error 3.755e-02 (wor"
+  }
+ },
+ "block64_big": {
+  "turn 1 | batch 1, ctx 80000, layer sliding, q_len 753, page 1, dist soft": {
+   "us": 962.1919989585876,
+   "speedup": 0.9851339625840532,
+   "check": "OK update relative L2 error 5.295e-02 (worst row 1.200e-01) [bound 0.120]; attention input relative L2 error 3.428e-02 (wor"
+  },
+  "turn 1 | batch 1, ctx 80000, layer full, q_len 753, page 1, dist soft": {
+   "us": 1335.9999656677246,
+   "speedup": 0.9856407231792476,
+   "check": "OK update relative L2 error 6.235e-02 (worst row 1.046e-01) [bound 0.150]; attention input relative L2 error 3.987e-02 (wor"
+  },
+  "first turn | batch 1, ctx 0, layer full, q_len 16384, page 1, dist soft": {
+   "us": 14940.656185150146,
+   "speedup": 0.9625108835535332,
+   "check": "OK update relative L2 error 2.221e-02 (worst row 7.579e-02) [bound 0.044]; attention input relative L2 error 1.454e-02 (wor"
+  },
+  "first turn | batch 1, ctx 32768, layer sliding, q_len 16384, page 1, dist soft": {
+   "us": 15594.575881958008,
+   "speedup": 0.9444565767646451,
+   "check": "OK update relative L2 error 3.526e-02 (worst row 1.078e-01) [bound 0.070]; attention input relative L2 error 2.302e-02 (wor"
+  },
+  "first turn | batch 1, ctx 32768, layer full, q_len 16384, page 1, dist soft": {
+   "us": 19255.919456481934,
+   "speedup": 0.9644294236699528,
+   "check": "OK update relative L2 error 5.552e-02 (worst row 1.209e-01) [bound 0.133]; attention input relative L2 error 3.549e-02 (wor"
+  },
+  "first turn | batch 1, ctx 65536, layer full, q_len 16384, page 1, dist soft": {
+   "us": 23664.47925567627,
+   "speedup": 0.9884715103426472,
+   "check": "OK update relative L2 error 5.829e-02 (worst row 1.295e-01) [bound 0.141]; attention input relative L2 error 3.755e-02 (wor"
+  }
+ },
+ "block32_big": {
+  "turn 1 | batch 1, ctx 80000, layer sliding, q_len 753, page 1, dist soft": {
+   "us": 968.7039852142334,
+   "speedup": 0.9785115279474305,
+   "check": "OK update relative L2 error 5.295e-02 (worst row 1.200e-01) [bound 0.120]; attention input relative L2 error 3.428e-02 (wor"
+  },
+  "turn 1 | batch 1, ctx 80000, layer full, q_len 753, page 1, dist soft": {
+   "us": 1357.2480082511902,
+   "speedup": 0.970210281630768,
+   "check": "OK update relative L2 error 6.235e-02 (worst row 1.046e-01) [bound 0.150]; attention input relative L2 error 3.987e-02 (wor"
+  },
+  "first turn | batch 1, ctx 0, layer full, q_len 16384, page 1, dist soft": {
+   "us": 17218.144416809082,
+   "speedup": 0.8351970942698989,
+   "check": "OK update relative L2 error 2.221e-02 (worst row 7.579e-02) [bound 0.044]; attention input relative L2 error 1.454e-02 (wor"
+  },
+  "first turn | batch 1, ctx 32768, layer sliding, q_len 16384, page 1, dist soft": {
+   "us": 18205.440521240234,
+   "speedup": 0.809010896297015,
+   "check": "OK update relative L2 error 3.526e-02 (worst row 1.078e-01) [bound 0.070]; attention input relative L2 error 2.302e-02 (wor"
+  },
+  "first turn | batch 1, ctx 32768, layer full, q_len 16384, page 1, dist soft": {
+   "us": 21300.78411102295,
+   "speedup": 0.8718446798416027,
+   "check": "OK update relative L2 error 5.552e-02 (worst row 1.209e-01) [bound 0.133]; attention input relative L2 error 3.549e-02 (wor"
+  },
+  "first turn | batch 1, ctx 65536, layer full, q_len 16384, page 1, dist soft": {
+   "us": 25427.99949645996,
+   "speedup": 0.9199175717534174,
+   "check": "OK update relative L2 error 5.829e-02 (worst row 1.295e-01) [bound 0.141]; attention input relative L2 error 3.755e-02 (wor"
+  }
+ }
+}
