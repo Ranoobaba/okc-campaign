@@ -97,3 +97,4 @@ What was tried overnight after the four entries (all on the replica, all discard
 Where the next real gains are (needs CUDA at FA3/Marlin quality, multi-day): attention full-context decode is 3x off
 roofline for everyone including FA3; MoE needs <2 instr/weight dequant; the layer needs ~10 launches, not ~20.
 Cheap remaining items: layer launch cuts, Marlin block-size tuning per shape, resubmitting v3b moe (+2%).
+- 07:50 PDT: decode_layer v4 REAL x1.1497 [1.132, 1.167]; moe v3b REAL x1.1483 (#695). Overall #701/1094.
