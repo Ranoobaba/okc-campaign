@@ -42,3 +42,4 @@ date	problem	tag	ok	speedup	note
 2026-10-25T09:40	muse_attention_decode	v10_tok_sliding	ok	1.1742	per-token split on sliding verify: b1 1.87x (from 1.43) but b16/b32 regress (0.89/0.63, window re-read per token); v11 limits it to B*L<=32
 2026-10-25T09:50	muse_decode_layer	v4 REAL JUDGE	ok	1.1497	job 01c1d827553b4333 CI [1.132,1.167]; replica 1.1675
 2026-10-25T09:50	muse_moe_w4a16	v3b REAL JUDGE	ok	1.1483	job 3f4d681aa3a746be CI [1.131,1.166]; board #695
+2026-10-25T10:00	muse_attention_decode	v11_tok_small	ok	1.2267	KEEP (Pareto: verify-1 sliding 1.43->1.83, no regressions; +0.5% geomean, not resubmitted)

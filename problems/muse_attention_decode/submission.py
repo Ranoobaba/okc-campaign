@@ -184,6 +184,106 @@ def _attn(q_ptr, kc_ptr, vc_ptr, table_ptr, seqlens_ptr, k_scale_ptr, v_scale_pt
 
 
 @triton.jit
+def _attn_tok(q_ptr, kc_ptr, vc_ptr, table_ptr, seqlens_ptr, k_scale_ptr, v_scale_ptr,
+          po_ptr, pm_ptr, pl_ptr, sm_scale, chunk,
+          L: tl.constexpr, GROUP: tl.constexpr, HQ: tl.constexpr, HKV: tl.constexpr, D: tl.constexpr,
+          PAGE: tl.constexpr, MAX_PAGES, WINDOW: tl.constexpr, NSPLIT: tl.constexpr,
+          BLOCK_Q: tl.constexpr, BLOCK_N: tl.constexpr, SCALED: tl.constexpr):
+    t = tl.program_id(0)  # token = b * L + j
+    h = tl.program_id(1)
+    s = tl.program_id(2)
+    b = t // L
+    j = t % L
+    seqlen = tl.load(seqlens_ptr + b)  # cached + L new tokens
+    first_q = seqlen - L
+    qpos_t = first_q + j
+    if WINDOW > 0:
+        base = tl.maximum(qpos_t - WINDOW + 1, 0)
+    else:
+        base = 0
+    start = base + s * chunk
+    end = tl.minimum(start + chunk, qpos_t + 1)
+    r = tl.arange(0, BLOCK_Q)
+    d = tl.arange(0, D)
+    g = r
+    rmask = r < GROUP
+    qpos = tl.zeros((BLOCK_Q,), tl.int32) + qpos_t
+    pbase = ((t * HKV + h) * NSPLIT + s).to(tl.int64) * BLOCK_Q
+    if start >= end:
+        tl.store(pm_ptr + pbase + r, tl.full((BLOCK_Q,), NEG_INF, tl.float32))
+        tl.store(pl_ptr + pbase + r, tl.zeros((BLOCK_Q,), tl.float32))
+        tl.store(po_ptr + (pbase + r)[:, None] * D + d[None, :], tl.zeros((BLOCK_Q, D), tl.float32))
+        return
+    qrow = (t * HQ + h * GROUP + g).to(tl.int64)
+    q = tl.load(q_ptr + qrow[:, None] * D + d[None, :], mask=rmask[:, None], other=0.0)
+    qk_scale = sm_scale
+    if SCALED:
+        qk_scale = sm_scale * tl.load(k_scale_ptr)
+    m_i = tl.full((BLOCK_Q,), NEG_INF, tl.float32)
+    l_i = tl.zeros((BLOCK_Q,), tl.float32)
+    acc = tl.zeros((BLOCK_Q, D), tl.float32)
+    tbl = table_ptr + b.to(tl.int64) * MAX_PAGES
+    for n0 in range(start, end, BLOCK_N):
+        pos = n0 + tl.arange(0, BLOCK_N)
+        kmask = pos < end
+        page = tl.load(tbl + pos // PAGE, mask=kmask, other=0).to(tl.int64)
+        rows = page * PAGE + (pos % PAGE)
+        kptr = kc_ptr + rows[:, None] * (HKV * D) + h * D + d[None, :]
+        k = tl.load(kptr, mask=kmask[:, None], other=0.0)
+        sc = tl.dot(q, tl.trans(k)) * qk_scale
+        vis = kmask[None, :] & (pos[None, :] <= qpos[:, None])
+        if WINDOW > 0:
+            vis = vis & (pos[None, :] > qpos[:, None] - WINDOW)
+        sc = tl.where(vis, sc, NEG_INF)
+        m_new = tl.maximum(m_i, tl.max(sc, 1))
+        m_safe = tl.where(m_new == NEG_INF, 0.0, m_new)
+        alpha = tl.exp(m_i - m_safe)
+        p = tl.exp(sc - m_safe[:, None])
+        l_i = l_i * alpha + tl.sum(p, 1)
+        vptr = vc_ptr + rows[:, None] * (HKV * D) + h * D + d[None, :]
+        v = tl.load(vptr, mask=kmask[:, None], other=0.0)
+        acc = acc * alpha[:, None] + tl.dot(p.to(tl.bfloat16), v.to(tl.bfloat16))
+        m_i = m_new
+    if SCALED:
+        acc = acc * tl.load(v_scale_ptr)
+    tl.store(pm_ptr + pbase + r, m_i)
+    tl.store(pl_ptr + pbase + r, l_i)
+    tl.store(po_ptr + (pbase + r)[:, None] * D + d[None, :], acc)
+
+
+@triton.jit
+def _combine_tok(po_ptr, pm_ptr, pl_ptr, qkv_ptr, out_ptr, eps,
+             L: tl.constexpr, GROUP: tl.constexpr, HQ: tl.constexpr, HKV: tl.constexpr, D: tl.constexpr,
+             NSPLIT: tl.constexpr, BLOCK_Q: tl.constexpr):
+    t = tl.program_id(0)
+    h = tl.program_id(1)
+    r = tl.arange(0, BLOCK_Q)
+    d = tl.arange(0, D)
+    rmask = r < GROUP
+    pbase = ((t * HKV + h) * NSPLIT).to(tl.int64) * BLOCK_Q
+    m = tl.full((BLOCK_Q,), NEG_INF, tl.float32)
+    for s in tl.static_range(NSPLIT):
+        m = tl.maximum(m, tl.load(pm_ptr + pbase + s * BLOCK_Q + r))
+    m_safe = tl.where(m == NEG_INF, 0.0, m)
+    l = tl.zeros((BLOCK_Q,), tl.float32)
+    o = tl.zeros((BLOCK_Q, D), tl.float32)
+    for s in tl.static_range(NSPLIT):
+        ms = tl.load(pm_ptr + pbase + s * BLOCK_Q + r)
+        w = tl.exp(ms - m_safe)
+        l += w * tl.load(pl_ptr + pbase + s * BLOCK_Q + r)
+        o += w[:, None] * tl.load(po_ptr + (pbase + s * BLOCK_Q + r)[:, None] * D + d[None, :])
+    o = o / tl.maximum(l, 1e-30)[:, None]
+    o = o * tl.rsqrt(tl.sum(o * o, 1) / D + eps)[:, None]
+    g = r
+    tok = tl.zeros((BLOCK_Q,), tl.int64) + t.to(tl.int64)
+    head = h * GROUP + g
+    gate = tl.load(qkv_ptr + tok[:, None] * ((2 * HQ + 2 * HKV) * D) + (HQ + 2 * HKV) * D + head[:, None] * D + d[None, :],
+                   mask=rmask[:, None], other=0.0).to(tl.float32)
+    o = o * tl.sigmoid(gate)
+    tl.store(out_ptr + tok[:, None] * (HQ * D) + head[:, None] * D + d[None, :], o.to(tl.bfloat16), mask=rmask[:, None])
+
+
+@triton.jit
 def _combine(po_ptr, pm_ptr, pl_ptr, qkv_ptr, out_ptr, eps,
              L: tl.constexpr, GROUP: tl.constexpr, HQ: tl.constexpr, HKV: tl.constexpr, D: tl.constexpr,
              NSPLIT: tl.constexpr, BLOCK_Q: tl.constexpr):
@@ -282,6 +382,44 @@ def _fa3_path(data):
     return o.view(batch, length, hq * d)
 
 
+def _window_tok_path(data):
+    """Sliding layers, verify blocks: one 16-row problem per (token, kv head, chunk)."""
+    cfg = data["config"]
+    B, L = cfg["batch"], cfg["q_len"]
+    HQ, HKV, D = cfg["num_q_heads"], cfg["num_kv_heads"], cfg["head_dim"]
+    page = cfg["page_size"]
+    window = cfg["window"]
+    theta = cfg["rope_theta"]
+    scaled = cfg["kv_scale"] != 1.0
+    qkv = data["qkv"]
+    if not qkv.is_contiguous():
+        qkv = qkv.contiguous()
+    T = B * L
+    dev = qkv.device
+    k_cache, v_cache = data["k_cache"], data["v_cache"]
+    table = data["page_table"]
+    q_scratch = torch.empty((T, HQ, D), dtype=torch.float8_e4m3fn, device=dev)
+    _prep[(T,)](qkv, data["positions"], data["cache_loc"], k_cache, v_cache, q_scratch,
+                data["k_scale"], data["v_scale"], 1.0, theta if theta else 1.0, RMS_EPS,
+                HQ=HQ, HKV=HKV, D=D, HALF=D // 2, ROPE=bool(theta), SCALED=scaled, num_warps=4)
+    group = HQ // HKV
+    block_q = max(16, triton.next_power_of_2(group))
+    block_n = 128
+    max_len = table.shape[1] * page
+    chunk, nsplit = _plan(T, HKV, max_len, window, 1, block_n)
+    po = torch.empty((T * HKV * nsplit * block_q, D), dtype=torch.float32, device=dev)
+    pm = torch.empty((T * HKV * nsplit * block_q,), dtype=torch.float32, device=dev)
+    pl = torch.empty_like(pm)
+    _attn_tok[(T, HKV, nsplit)](q_scratch, k_cache, v_cache, table, data["cache_seqlens"], data["k_scale"], data["v_scale"],
+                                po, pm, pl, cfg["sm_scale"] * cfg["qk_scale_factor"], chunk,
+                                L=L, GROUP=group, HQ=HQ, HKV=HKV, D=D, PAGE=page, MAX_PAGES=table.stride(0), WINDOW=window,
+                                NSPLIT=nsplit, BLOCK_Q=block_q, BLOCK_N=block_n, SCALED=scaled, num_warps=4, num_stages=2)
+    out = torch.empty((B, L, HQ * D), dtype=torch.bfloat16, device=dev)
+    _combine_tok[(T, HKV)](po, pm, pl, qkv, out, RMS_EPS, L=L, GROUP=group, HQ=HQ, HKV=HKV, D=D, NSPLIT=nsplit,
+                           BLOCK_Q=block_q, num_warps=4)
+    return out
+
+
 def _plan(batch, hkv, max_len, window, L, block_n):
     """(chunk, nsplit): key chunk per program so that about 300 programs are in flight."""
     span = min(max_len, window + L) if window else max_len
@@ -300,6 +438,8 @@ def kernel_fn(data: Inputs) -> torch.Tensor:
     window = cfg["window"]
     if L * (HQ // HKV) > 16 and not window:
         return _fa3_path(data)  # long query blocks over the full context: FA3 still wins there
+    if window and 1 < L <= 16 and B * L <= 32:
+        return _window_tok_path(data)  # small verify batches: per-token split wins; larger ones re-read the window too often
     theta = cfg["rope_theta"]
     scaled = cfg["kv_scale"] != 1.0
     qkv = data["qkv"]
