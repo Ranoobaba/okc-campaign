@@ -36,3 +36,4 @@ date	problem	tag	ok	speedup	note
 2026-10-25T08:05	muse_moe_w4a16	v4f_tiles	ok	0.6499	contiguous tiles + cheap scale cvt: no change (110us bs1). Instruction-latency bound per warp; profiling v4f
 2026-10-25T08:25	muse_moe_w4a16	v4g_lean	ok	0.8525	lean dequant + split-K 8: bs1 110->78us (beats baseline 85, not Marlin+fused 62); bs16 248 bs32 328 still slow
 2026-10-25T08:45	muse_moe_w4a16	v4g ncu bs16	-	-	GEMM1 130us SM-bound 72%; CUDA MoE path parked (parity ceiling)
+2026-10-25T08:55	muse_moe_w4a16	v4h_lb8	ok	0.7561	DISCARD: register cap no gain (82.6us bs1); CUDA MoE parked at v4g
