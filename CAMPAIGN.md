@@ -66,3 +66,13 @@ Targets: all four decode boards entered; overall top 50 (serving priority); then
 - Board: proj #826 (1.107), attention #588 (1.181), moe #700 (1.134). Overall #705/1081, solved 3/4.
 - decode_layer v2 (attention v2 + moe v3) replica x1.0935, 13/13 tests; v3 with attention v6 running; submit on pass.
 - Attention latency findings in LEARNINGS.md: launch fusion did not help; the per-kernel dependency chain does.
+
+## 2026-10-25 05:15 PDT: all four decode boards entered
+
+- decode_layer v3 REAL JUDGE x1.1220 [1.105, 1.139] (job fa8d57ba9f2746ca), #572/636. Overall #693/1083, solved 4/4.
+- Board: proj #827 (1.107), attention #588 (1.181), moe #700 (1.134), layer #572 (1.122). Top 50 needs
+  roughly proj 1.46, attention 2.19, moe 2.13, layer 1.89.
+- proj v3 (TMA-streamed Triton skinny GEMM configs): x1.1023, no gain over cuBLAS. DISCARD.
+- Real-judge profiles show ~5 us of fixed cost per kernel inside the timed graph: cuBLAS split-K (2 kernels) at
+  m 8..32 pays it twice. Next proj experiment: per-shape cuBLASLt algorithm search favouring single-kernel algos.
+- MoE Marlin variant sweep (atomic add, fp32 reduce, block sizes, workspace) running on the microbench.
