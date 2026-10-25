@@ -76,3 +76,17 @@ Durable facts across sessions. Read before designing anything.
   row split is 8x KV re-read. Still unexplained; candidates: fp8 trans layout conversions per tile, exp cost,
   or latency chains with too few programs per SM. Needs an ncu pass.
 - FP8 x FP8 QK dot (queries rounded to E4M3) is accepted by the checker with ~4 to 7% error against a 11 to 15% bound.
+
+## proj: what does not beat cuBLAS at m 8..256 (2026-10-25 06:40)
+
+- Triton tl.dot skinny GEMM (any tile), Triton TMA-streamed GEMM, cuBLASLt heuristic algo search, and a hand
+  CUDA mma.sync kernel (4 warps split K, cp.async 3 stages): all at or below cuBLAS. The CUDA kernel measured
+  1.5x slower than cuBLAS (33.6 vs 22 us at m 16 qkv_gate): too little data in flight per SM.
+- Judge-timed shape time ~= kernel GPU time + ~4.5 us per kernel launch. cuBLAS split-K = 2 kernels at ~4.7 TB/s.
+  A single-kernel GEMM at >= 4.5 TB/s would give ~1.5x on m 8..32 shapes; that is the bar.
+- The router (fp32 weights) is where we win: hi/lo bf16 Triton dot at 1.6 to 2.8x.
+
+## attention: single launch needs an unrolled combine (2026-10-25 06:40)
+
+- v5 (one launch, last split merges) was slow because the merge loop used a runtime `range` over splits: every
+  partial load serialized (~1 us each). Use tl.static_range and cap splits so the unrolled loop stays small.
