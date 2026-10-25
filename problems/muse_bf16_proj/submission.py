@@ -116,13 +116,16 @@ def _skinny(x_ptr, w_ptr, w2_ptr, out_ptr, M, N, K, stride_xm, stride_wn, stride
         tl.store(out_ptrs, acc.to(tl.bfloat16), mask=mask)
 
 
-def _launch(x, w, w2, n, cfg):
-    """One projection with config cfg: kind 'gemv', 'dot' or 'torch'. Returns the output tensor."""
+def _launch(x, w, w2, n, cfg, out=None):
+    """One projection with config cfg: kind 'gemv', 'dot' or 'torch'. Returns the output tensor (written
+    into `out`, a [m, n] view with unit column stride, when given)."""
     m, k = x.shape
     f32 = w2 is not None
     out_dtype = torch.float32 if f32 else torch.bfloat16
     if cfg["kind"] == "torch":
         if not f32:
+            if out is not None:
+                return torch.matmul(x, w.T, out=out)
             return torch.matmul(x, w.T)
         if m <= 8:
             return torch.nn.functional.linear(x.float(), cfg["router"])
@@ -130,7 +133,8 @@ def _launch(x, w, w2, n, cfg):
         acc += torch.mm(x, cfg["lo_t"], out_dtype=torch.float32)
         return acc
     if cfg["kind"] == "gemv":
-        out = torch.empty((1, n), dtype=out_dtype, device=x.device)
+        if out is None:
+            out = torch.empty((1, n), dtype=out_dtype, device=x.device)
         grid = (triton.cdiv(n, cfg["BLOCK_N"]),)
         _gemv[grid](x, w, w2 if f32 else w, out, n, k, w.stride(0),
                     BLOCK_N=cfg["BLOCK_N"], BLOCK_K=cfg["BLOCK_K"], HAS_LO=f32, OUT_F32=f32,
@@ -138,9 +142,10 @@ def _launch(x, w, w2, n, cfg):
         return out
     split = cfg.get("SPLIT_K", 1)
     atomic = split > 1
+    final_out = out
     if atomic:
         out = torch.zeros((m, n), dtype=torch.float32, device=x.device)
-    else:
+    elif out is None:
         out = torch.empty((m, n), dtype=out_dtype, device=x.device)
     grid = (triton.cdiv(n, cfg["BLOCK_N"]), triton.cdiv(m, cfg["BLOCK_M"]), split)
     _skinny[grid](x, w, w2 if f32 else w, out, m, n, k, x.stride(0), w.stride(0), out.stride(0),
@@ -148,6 +153,9 @@ def _launch(x, w, w2, n, cfg):
                   HAS_LO=f32, ATOMIC=atomic, OUT_F32=f32 or atomic,
                   num_warps=cfg["warps"], num_stages=cfg["stages"])
     if atomic and not f32:
+        if final_out is not None:
+            final_out.copy_(out)
+            return final_out
         out = out.to(torch.bfloat16)
     return out
 
@@ -286,7 +294,7 @@ def _pick(cfgs, layer, m, n):
     return cfg
 
 
-def kernel_fn(data: Inputs, state) -> torch.Tensor:
+def kernel_fn(data: Inputs, state, out=None) -> torch.Tensor:
     cfg_in = data["config"]
     layer, n = cfg_in["layer"], cfg_in["n"]
     x = data["x"]
@@ -297,4 +305,4 @@ def kernel_fn(data: Inputs, state) -> torch.Tensor:
         cfg = dict(cfg, router=state["router"], hi_t=state["router_hi_t"], lo_t=state["router_lo_t"])
     if x.stride(1) != 1:
         x = x.contiguous()
-    return _launch(x, w[:n], w2[:n] if w2 is not None else None, n, cfg)
+    return _launch(x, w[:n], w2[:n] if w2 is not None else None, n, cfg, out=out)

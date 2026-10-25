@@ -8,6 +8,17 @@ from sglang.srt.layers.muse_spark_layers import (
     MuseSpark1xRMSNormWithInputScale,
 )
 
+@triton.jit
+def _local_ids_kernel(ids_ptr, start_ptr, out_ptr, n, N_EXPERTS: tl.constexpr, LOCAL: tl.constexpr, BLOCK: tl.constexpr):
+    offs = tl.program_id(0) * BLOCK + tl.arange(0, BLOCK)
+    mask = offs < n
+    start = tl.load(start_ptr)
+    ids = tl.load(ids_ptr + offs, mask=mask, other=0)
+    loc = (ids - start) % N_EXPERTS
+    loc = tl.where(loc < LOCAL, loc, -1)
+    tl.store(out_ptr + offs, loc.to(tl.int32), mask=mask)
+
+
 HIDDEN = 8192
 D_EXPERT = 4096
 LOCAL_EXPERTS = 32
@@ -67,9 +78,9 @@ def prepare(weights):
     return state
 
 
-def _proj(state, x, layer, n):
+def _proj(state, x, layer, n, out=None):
     data = {"x": x, "config": {"m": x.shape[0], "n": n, "k": x.shape[1], "layer": layer}}
-    return proj_kernel_fn(data, state["proj"])
+    return proj_kernel_fn(data, state["proj"], out=out)
 
 
 def kernel_fn(data, state):
@@ -99,12 +110,15 @@ def kernel_fn(data, state):
     topk_weights, topk_ids = state["routing"](None, logits, TOP_K, True)
     # MoE block.
     expert_input = state["pre_expert_norm"](_proj(state, ffn_input, "pooler", D_EXPERT))
-    local_ids = (topk_ids - data["local_start"]) % N_EXPERTS
-    local_ids = torch.where(local_ids < LOCAL_EXPERTS, local_ids, -1).to(torch.int32)
+    local_ids = torch.empty((T, TOP_K), dtype=torch.int32, device=x.device)
+    n_ids = T * TOP_K
+    _local_ids_kernel[(triton.cdiv(n_ids, 1024),)](topk_ids, data["local_start"], local_ids, n_ids,
+                                                   N_EXPERTS=N_EXPERTS, LOCAL=LOCAL_EXPERTS, BLOCK=1024, num_warps=4)
     expert_output = _moe_core(expert_input.contiguous(), local_ids, topk_weights.float().contiguous(), state["moe"],
                               TOP_K, LOCAL_EXPERTS, D_EXPERT)
     if T <= SLICED_MAX_TOKENS:
-        ffn_output = F.pad(_proj(state, expert_output, "unpooler", UNPOOL_SLICE), (0, HIDDEN - UNPOOL_SLICE))
+        ffn_output = torch.zeros((T, HIDDEN), dtype=torch.bfloat16, device=x.device)
+        _proj(state, expert_output, "unpooler", UNPOOL_SLICE, out=ffn_output[:, :UNPOOL_SLICE])
     else:
         ffn_output = _proj(state, expert_output, "unpooler", HIDDEN)
     next_attn_input, stream, _ = state["ffn_boundary"](stream, ffn_output, branch_dtype=torch.bfloat16)

@@ -95,13 +95,16 @@ def _skinny(x_ptr, w_ptr, w2_ptr, out_ptr, M, N, K, stride_xm, stride_wn, stride
         tl.store(out_ptrs, acc.to(tl.bfloat16), mask=mask)
 
 
-def _launch(x, w, w2, n, cfg):
-    """One projection with config cfg: kind 'gemv', 'dot' or 'torch'. Returns the output tensor."""
+def _launch(x, w, w2, n, cfg, out=None):
+    """One projection with config cfg: kind 'gemv', 'dot' or 'torch'. Returns the output tensor (written
+    into `out`, a [m, n] view with unit column stride, when given)."""
     m, k = x.shape
     f32 = w2 is not None
     out_dtype = torch.float32 if f32 else torch.bfloat16
     if cfg["kind"] == "torch":
         if not f32:
+            if out is not None:
+                return torch.matmul(x, w.T, out=out)
             return torch.matmul(x, w.T)
         if m <= 8:
             return torch.nn.functional.linear(x.float(), cfg["router"])
@@ -109,7 +112,8 @@ def _launch(x, w, w2, n, cfg):
         acc += torch.mm(x, cfg["lo_t"], out_dtype=torch.float32)
         return acc
     if cfg["kind"] == "gemv":
-        out = torch.empty((1, n), dtype=out_dtype, device=x.device)
+        if out is None:
+            out = torch.empty((1, n), dtype=out_dtype, device=x.device)
         grid = (triton.cdiv(n, cfg["BLOCK_N"]),)
         _gemv[grid](x, w, w2 if f32 else w, out, n, k, w.stride(0),
                     BLOCK_N=cfg["BLOCK_N"], BLOCK_K=cfg["BLOCK_K"], HAS_LO=f32, OUT_F32=f32,
@@ -117,9 +121,10 @@ def _launch(x, w, w2, n, cfg):
         return out
     split = cfg.get("SPLIT_K", 1)
     atomic = split > 1
+    final_out = out
     if atomic:
         out = torch.zeros((m, n), dtype=torch.float32, device=x.device)
-    else:
+    elif out is None:
         out = torch.empty((m, n), dtype=out_dtype, device=x.device)
     grid = (triton.cdiv(n, cfg["BLOCK_N"]), triton.cdiv(m, cfg["BLOCK_M"]), split)
     _skinny[grid](x, w, w2 if f32 else w, out, m, n, k, x.stride(0), w.stride(0), out.stride(0),
@@ -127,6 +132,9 @@ def _launch(x, w, w2, n, cfg):
                   HAS_LO=f32, ATOMIC=atomic, OUT_F32=f32 or atomic,
                   num_warps=cfg["warps"], num_stages=cfg["stages"])
     if atomic and not f32:
+        if final_out is not None:
+            final_out.copy_(out)
+            return final_out
         out = out.to(torch.bfloat16)
     return out
 
@@ -265,7 +273,7 @@ def _pick(cfgs, layer, m, n):
     return cfg
 
 
-def proj_kernel_fn(data: Inputs, state) -> torch.Tensor:
+def proj_kernel_fn(data: Inputs, state, out=None) -> torch.Tensor:
     cfg_in = data["config"]
     layer, n = cfg_in["layer"], cfg_in["n"]
     x = data["x"]
@@ -276,7 +284,7 @@ def proj_kernel_fn(data: Inputs, state) -> torch.Tensor:
         cfg = dict(cfg, router=state["router"], hi_t=state["router_hi_t"], lo_t=state["router_lo_t"])
     if x.stride(1) != 1:
         x = x.contiguous()
-    return _launch(x, w[:n], w2[:n] if w2 is not None else None, n, cfg)
+    return _launch(x, w[:n], w2[:n] if w2 is not None else None, n, cfg, out=out)
 
 # ====================== component: attn ======================
 
@@ -666,14 +674,16 @@ def _experts_marlin(x, local_ids, topk_weights, bank, ws, top_k):
     for block_size_m in BLOCK_SIZE_M_CANDIDATES:
         if num_tokens * top_k / count / block_size_m < 0.9:
             break
+    block_size_m = max(block_size_m, 16) if num_tokens >= 16 else block_size_m  # measured: 16 beats 8 at bs 16
     sorted_ids, block_experts, n_padded = moe_align_block_size(local_ids, block_size_m, count)
     cache2 = torch.empty((num_tokens * top_k, size_n), device=x.device, dtype=x.dtype)
     cache13 = torch.empty((num_tokens * top_k * max(gemm1_n, size_k),), device=x.device, dtype=x.dtype)
     cache1 = cache13[: num_tokens * top_k * gemm1_n].view(-1, gemm1_n)
     cache3 = cache13[: num_tokens * top_k * size_k].view(-1, size_k)
+    tiny = num_tokens <= 8  # measured: atomic adds beat the fp32 reduce pass at bs 1 to 8
     common = dict(moe_block_size=block_size_m, mul_topk_weights=False, is_ep=True,
-                  b_q_type=scalar_types.float4_e2m1f, is_k_full=True, use_atomic_add=False,
-                  use_fp32_reduce=True, is_zp_float=False)
+                  b_q_type=scalar_types.float4_e2m1f, is_k_full=True, use_atomic_add=tiny,
+                  use_fp32_reduce=not tiny, is_zp_float=False)
     cache1 = moe_wna16_marlin_gemm(
         x, cache1, bank["w13"], None, bank["w13_s"], bank["w13_gs"], None, None, None, ws,
         sorted_ids, block_experts, n_padded, topk_weights, top_k=top_k,
@@ -720,6 +730,17 @@ from sglang.srt.layers.muse_spark_layers import (
     MuseSpark1xRMSNorm,
     MuseSpark1xRMSNormWithInputScale,
 )
+
+@triton.jit
+def _local_ids_kernel(ids_ptr, start_ptr, out_ptr, n, N_EXPERTS: tl.constexpr, LOCAL: tl.constexpr, BLOCK: tl.constexpr):
+    offs = tl.program_id(0) * BLOCK + tl.arange(0, BLOCK)
+    mask = offs < n
+    start = tl.load(start_ptr)
+    ids = tl.load(ids_ptr + offs, mask=mask, other=0)
+    loc = (ids - start) % N_EXPERTS
+    loc = tl.where(loc < LOCAL, loc, -1)
+    tl.store(out_ptr + offs, loc.to(tl.int32), mask=mask)
+
 
 HIDDEN = 8192
 D_EXPERT = 4096
@@ -780,9 +801,9 @@ def prepare(weights):
     return state
 
 
-def _proj(state, x, layer, n):
+def _proj(state, x, layer, n, out=None):
     data = {"x": x, "config": {"m": x.shape[0], "n": n, "k": x.shape[1], "layer": layer}}
-    return proj_kernel_fn(data, state["proj"])
+    return proj_kernel_fn(data, state["proj"], out=out)
 
 
 def kernel_fn(data, state):
@@ -812,12 +833,15 @@ def kernel_fn(data, state):
     topk_weights, topk_ids = state["routing"](None, logits, TOP_K, True)
     # MoE block.
     expert_input = state["pre_expert_norm"](_proj(state, ffn_input, "pooler", D_EXPERT))
-    local_ids = (topk_ids - data["local_start"]) % N_EXPERTS
-    local_ids = torch.where(local_ids < LOCAL_EXPERTS, local_ids, -1).to(torch.int32)
+    local_ids = torch.empty((T, TOP_K), dtype=torch.int32, device=x.device)
+    n_ids = T * TOP_K
+    _local_ids_kernel[(triton.cdiv(n_ids, 1024),)](topk_ids, data["local_start"], local_ids, n_ids,
+                                                   N_EXPERTS=N_EXPERTS, LOCAL=LOCAL_EXPERTS, BLOCK=1024, num_warps=4)
     expert_output = _moe_core(expert_input.contiguous(), local_ids, topk_weights.float().contiguous(), state["moe"],
                               TOP_K, LOCAL_EXPERTS, D_EXPERT)
     if T <= SLICED_MAX_TOKENS:
-        ffn_output = F.pad(_proj(state, expert_output, "unpooler", UNPOOL_SLICE), (0, HIDDEN - UNPOOL_SLICE))
+        ffn_output = torch.zeros((T, HIDDEN), dtype=torch.bfloat16, device=x.device)
+        _proj(state, expert_output, "unpooler", UNPOOL_SLICE, out=ffn_output[:, :UNPOOL_SLICE])
     else:
         ffn_output = _proj(state, expert_output, "unpooler", HIDDEN)
     next_attn_input, stream, _ = state["ffn_boundary"](stream, ffn_output, branch_dtype=torch.bfloat16)
