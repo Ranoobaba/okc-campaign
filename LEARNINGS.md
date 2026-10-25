@@ -109,3 +109,7 @@ Durable facts across sessions. Read before designing anything.
   issue 0.74/cycle: now instruction-throughput bound (~150 warp-instructions per 64-k chunk per warp). Marlin at
   bs 1 is latency/occupancy bound instead (46 us for ~56 MB). To beat it: halve the instruction count (8-nibble
   prmt dequant ~17 ops per 8 values, SIMD scale conversion, hoisted cp.async pointers) and split K 8 ways.
+- v4g ncu (bs 1): GEMM1 44 us (SM 66%, DRAM 28%, occupancy 42%), GEMM2 28 us. Still instruction-bound at roughly
+  100 to 140 warp-instructions per 64-k chunk per warp; the prmt dequant (1.5/value), scale conversion and copy
+  issue dominate. Realistic ceiling of this design ~25 us per GEMM = parity with Marlin + fused finalize at bs 1.
+  Parked; the layer's launch count is the cheaper lever now (~22 launches x ~4.5 us fixed = ~100 of 155 us at bs 1).
