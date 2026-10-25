@@ -1,0 +1,22 @@
+{
+ "problem": "muse_decode_layer",
+ "gpu": "NVIDIA H200",
+ "torch": "2.14.1+cu130",
+ "tests": [
+  {
+   "case": "batch 1, ctx 10, layer sliding",
+   "ok": false,
+   "msg": "exception:\nTraceback (most recent call last):\n  File \"/root/judge.py\", line 157, in run\n    out = call_sub(d)\n          ^^^^^^^^^^^\n  File \"/root/judge.py\", line 131, in call_sub\n    return sub.kernel_fn(data, sub_state) if n_params >= 2 else sub.kernel_fn(data)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/sub/submission.py\", line 840, in kernel_fn\n    expert_output = _moe_core(expert_input.contiguous(), local_ids, topk_weights.float().contiguous(), state[\"moe\"],\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/sub/submission.py\", line 703, in _moe_core\n    y = _experts_marlin(x, local_ids.contiguous(), g, bank, st[\"workspace\"], top_k)\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/sub/submission.py\", line 687, in _experts_marlin\n    cache1 = moe_wna16_marlin_gemm(\n             ^^^^^^^^^^^^^^^^^^^^^^\n  File \"/sgl-workspace/sglang-muse-spark/python/sglang/kernels/ops/moe/moe_wna16_marlin.py\", line 140, in moe_wna16_marlin_gemm\n    module.moe_wna16_marlin_gemm(\n  File \"python/tvm_ffi/cython/function.pxi\", line 968, in tvm_ffi.core.Function.__call__\nRuntimeError: Failed at /sgl-workspace/sglang-muse-spark/python/sglang/kernels/jit/csrc/gemm/marlin_moe/moe_wna16_marlin.cuh:839: CUDA error: an illegal memory access was encountered\n",
+   "s": 245.9
+  }
+ ],
+ "shapes": [],
+ "ok": false,
+ "prepare_s": {
+  "baseline": 7.1,
+  "submission": 161.5
+ },
+ "error": "test failed: batch 1, ctx 10, layer sliding: exception:\nTraceback (most recent call last):\n  File \"/root/judge.py\", line 157, in run\n    out = call_sub(d)\n          ^^^^^^^^^^^\n  File \"/root/judge.py\", line 131, in call_sub\n    return sub.kernel_fn(data, sub_state) if n_params >= 2 else sub.kernel_fn(data)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/sub/submission.py\", line 840, in kernel_fn\n    expert_output = _moe_core(expert_input.contiguous(), local_ids, topk_weights.float().contiguous(), state[\"moe\"],\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/sub/submission.py\", line 703, in _moe_core\n    y = _experts_marlin(x, local_ids.contiguous(), g, bank, st[\"workspace\"], top_k)\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/sub/submission.py\", line 687, in _experts_marlin\n    cache1 = moe_wna16_marlin_gemm(\n             ^^^^^^^^^^^^^^^^^^^^^^\n  File \"/sgl-workspace/sglang-muse-spark/python/sglang/kernels/ops/moe/moe_wna16_marlin.py\", line 140, in moe_wna16_marlin_gemm\n    module.moe_wna16_marlin_gemm(\n  File \"python/tvm_ffi/cython/function.pxi\", line 968, in tvm_ffi.core.Function.__call__\nRuntimeError: Failed at /sgl-workspace/sglang-muse-spark/python/sglang/kernels/jit/csrc/gemm/marlin_moe/moe_wna16_marlin.cuh:839: CUDA error: an illegal memory access was encountered\n",
+ "submission": "/Users/rayyanscomputer/okc-campaign/problems/muse_decode_layer/submission.py",
+ "tag": "v4_fewer_launches"
+}

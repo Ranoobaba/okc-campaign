@@ -14,7 +14,7 @@ def _local_ids_kernel(ids_ptr, start_ptr, out_ptr, n, N_EXPERTS: tl.constexpr, L
     mask = offs < n
     start = tl.load(start_ptr)
     ids = tl.load(ids_ptr + offs, mask=mask, other=0)
-    loc = (ids - start) % N_EXPERTS
+    loc = (ids - start + N_EXPERTS) % N_EXPERTS  # Triton's % keeps the sign of the dividend
     loc = tl.where(loc < LOCAL, loc, -1)
     tl.store(out_ptr + offs, loc.to(tl.int32), mask=mask)
 
