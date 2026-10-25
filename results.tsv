@@ -38,3 +38,4 @@ date	problem	tag	ok	speedup	note
 2026-10-25T08:45	muse_moe_w4a16	v4g ncu bs16	-	-	GEMM1 130us SM-bound 72%; CUDA MoE path parked (parity ceiling)
 2026-10-25T08:55	muse_moe_w4a16	v4h_lb8	ok	0.7561	DISCARD: register cap no gain (82.6us bs1); CUDA MoE parked at v4g
 2026-10-25T09:00	muse_attention_decode	v9_prefetch	ok	1.0910	DISCARD: one-tile prefetch + 4x splits made full shapes worse (b16 280 vs 206us, b32 494 vs 352); register pressure + combine cost; attention parked at v6
+2026-10-25T09:20	muse_decode_layer	v4_fewer_launches	ok	1.1675	KEEP: fused local-ids kernel + unpooler into zeroed buffer (2 fewer launches): decode-1 1.38x; submitting
