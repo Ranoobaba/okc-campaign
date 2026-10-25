@@ -104,3 +104,4 @@ Cheap remaining items: layer launch cuts, Marlin block-size tuning per shape, re
 - 07:50 PDT: decode_layer v6 REAL x1.2196 [1.201, 1.238]. Overall #569/1098 (from #1019 at the first entry).
   Marlin sweep 3: block 8 everywhere loses 30% at bs 128/256; v3c rule stands. All cheap knobs are now exhausted;
   the remaining gaps (proj 1.61, attention 2.91, moe 2.52, layer 2.29 at #1) need CUDA-level rewrites.
+- 08:40 PDT: attention v12 (4x splits on full layers at batch >= 8) REAL x1.2464 [1.228, 1.272] (from 1.181).
