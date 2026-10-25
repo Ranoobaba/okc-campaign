@@ -76,3 +76,24 @@ Targets: all four decode boards entered; overall top 50 (serving priority); then
 - Real-judge profiles show ~5 us of fixed cost per kernel inside the timed graph: cuBLAS split-K (2 kernels) at
   m 8..32 pays it twice. Next proj experiment: per-shape cuBLASLt algorithm search favouring single-kernel algos.
 - MoE Marlin variant sweep (atomic add, fp32 reduce, block sizes, workspace) running on the microbench.
+
+## 2026-10-25 07:10 PDT: morning summary for Rayyan
+
+Board (real judge): proj #828 x1.107, attention #591 x1.181, moe #705 x1.134, decode_layer #574 x1.122.
+Overall #697/1085 with all four decode problems solved. Prefill not entered (no gain over baseline yet).
+
+What was tried overnight after the four entries (all on the replica, all discarded unless noted):
+- proj: Triton TMA configs (v3), cuBLASLt algo search (v4), CUDA skinny GEMM 4 warps (v5) and 8 K-split warps (v6):
+  none beat cuBLAS at m 8..256. ncu: our CUDA kernel runs 1.5 TB/s at 7% occupancy. Working: v2 (x1.10).
+- attention: fused prep (v4), one launch with atomic merge (v5, v7), unsplit window kernel (v8), tile prefetch +
+  4x splits (v9): the sliding shapes are bound by ~5 dependent memory round trips, not launches; full-context shapes
+  regress with register pressure. Working: v6 (x1.18 real).
+- moe: CUDA W4A16 streaming kernel v4..v4h: correct from the first run, improved from 159 us to 78 us at bs 1
+  (beats the SGLang baseline's 85 us) but still behind Marlin + fused finalize (62 us); ncu shows it is
+  instruction-bound at ~3.5 instr/weight, parity with Marlin is the ceiling of the design. Parked at v4g.
+  Working: v3b (Marlin + fused finalize + atomic-add at bs<=8, x1.16 replica; v3 is on the board at x1.134).
+- decode_layer: v4 removes two launches (fused local-ids kernel, unpooler straight into a zeroed buffer); running.
+
+Where the next real gains are (needs CUDA at FA3/Marlin quality, multi-day): attention full-context decode is 3x off
+roofline for everyone including FA3; MoE needs <2 instr/weight dequant; the layer needs ~10 launches, not ~20.
+Cheap remaining items: layer launch cuts, Marlin block-size tuning per shape, resubmitting v3b moe (+2%).
