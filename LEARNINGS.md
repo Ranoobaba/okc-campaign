@@ -90,3 +90,12 @@ Durable facts across sessions. Read before designing anything.
 
 - v5 (one launch, last split merges) was slow because the merge loop used a runtime `range` over splits: every
   partial load serialized (~1 us each). Use tl.static_range and cap splits so the unrolled loop stays small.
+
+## ncu on the MoE CUDA kernel v4b, bs 1 (2026-10-25 06:55)
+
+- Works on Modal H200 with `ncu --clock-control none` (clock locking is refused). Probe: harness/ncu_probe.py.
+- GEMM1: 90 us, DRAM 13.8%, L1/TEX 58%, SM 26%, achieved occupancy 12% (7.7 warps/SM), 0.43 waves, 1.93 active
+  warps per scheduler, 4.1 cycles per issued instruction, 56 regs, 20.8 KB static smem. Diagnosis: far too few
+  resident warps and an LDS-heavy inner loop (1-byte scattered smem loads for the packed weights).
+- Fix direction: 8 rows per warp (BN 32, 4 warps, ~1000 blocks), 4 stages (18 KB smem -> 11 blocks/SM), and a
+  lossless repack so each lane's 8 bytes per chunk are contiguous (one 64-bit LDS instead of 8 byte loads).
