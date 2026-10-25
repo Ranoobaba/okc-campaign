@@ -54,7 +54,7 @@ class Inputs(TypedDict):
 POST_NORM_EPS = 1e-8
 # 2^126 folded into the scale: an E2M1 nibble c placed at FP32 bits [22:24] (e1 e0 m) with the
 # sign at bit 31 reads as (1 + m/2) * 2^(e - 127) for e >= 1 and (m/2) * 2^-126 for e = 0.
-TWO_POW_126 = float(2.0 ** 126)
+TWO_POW_126 = tl.constexpr(float(2.0 ** 126))
 
 
 @triton.jit

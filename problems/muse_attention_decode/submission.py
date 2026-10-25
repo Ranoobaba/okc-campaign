@@ -48,7 +48,7 @@ class Inputs(TypedDict):
 
 
 RMS_EPS = 1e-5
-NEG_INF = float("-inf")
+NEG_INF = tl.constexpr(float("-inf"))
 
 
 @triton.jit

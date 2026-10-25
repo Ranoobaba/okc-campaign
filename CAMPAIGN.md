@@ -21,3 +21,13 @@ Targets: all four decode boards entered; overall top 50 (serving priority); then
    post-norm weighted sum; decode shapes as weight-streaming.
 4. decode_layer: assemble 1 to 3 with SGLang's fused norm/residual kernels (they are in the image).
 5. prefill_layer: CUTLASS/CuTe mixed-input WGMMA grouped GEMM vs Marlin.
+
+## 2026-10-25 04:40 PT: first kernels through the replica
+
+- Replica calibrated on proj (x1.0036), moe (x1.0012), attention (x0.9965): trustworthy.
+- proj v1 (Triton skinny GEMM, tuned in prepare): x1.0086. Router wins big (1.3 to 2.7x), m=1 gemv 1.1 to 1.3x,
+  but tl.dot path at m>=8 loses to cuBLAS (down to 0.6x at m=128). DISCARD.
+- proj v2 (same + per-(layer, m) race against cuBLAS in prepare, 3% margin): x1.1019, all tests pass. KEEP.
+  Headroom: m=1 gemv only reaches ~2.2 TB/s; needs a proper bandwidth GEMV (split-K or CUDA) to reach 1.6x+.
+- moe v1 compile error (Triton global constant); fixed, rerunning. attention v1 same bug; fixed, rerunning.
+- Devpost/product subagent (Opus) running in background for the Cal Hacks 8:30 am deadline.
