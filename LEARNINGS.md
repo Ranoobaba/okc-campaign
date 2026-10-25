@@ -113,3 +113,9 @@ Durable facts across sessions. Read before designing anything.
   100 to 140 warp-instructions per 64-k chunk per warp; the prmt dequant (1.5/value), scale conversion and copy
   issue dominate. Realistic ceiling of this design ~25 us per GEMM = parity with Marlin + fused finalize at bs 1.
   Parked; the layer's launch count is the cheaper lever now (~22 launches x ~4.5 us fixed = ~100 of 155 us at bs 1).
+- v4g ncu at bs 16: GEMM1 130 us, SM 72%: instruction-bound at ~3.5 instr/weight (prmt dequant 1.5, scales 0.9,
+  hmul2 0.5, mma 0.25). Marlin sits near 2/weight with the same mma.sync design; parity is the ceiling here.
+  MoE CUDA path PARKED at v4g (correct, 78 us at bs 1). Working submission stays v3b (Marlin + fused finalize).
+- Attention full-context shapes dominate 4 of 6 load times (b16 full 213 us, b32 full 399 us vs floors 63/126):
+  FA3 is 3x off roofline there and our split kernel only matches it. Software-prefetching the next tile's page
+  indices and K/V inside the program plus 4x more splits is the next attention experiment.

@@ -35,3 +35,4 @@ date	problem	tag	ok	speedup	note
 2026-10-25T07:50	muse_moe_w4a16	v4e_splitk	ok	0.6809	split-K 4: bs1 175->107us (still > Marlin 87); bs16/32 unchanged. Next: Marlin-style contiguous tile repack (32 rows x 32B per chunk strided 2KB today = poor DRAM efficiency) + cheap e4m3->bf16 scale cvt
 2026-10-25T08:05	muse_moe_w4a16	v4f_tiles	ok	0.6499	contiguous tiles + cheap scale cvt: no change (110us bs1). Instruction-latency bound per warp; profiling v4f
 2026-10-25T08:25	muse_moe_w4a16	v4g_lean	ok	0.8525	lean dequant + split-K 8: bs1 110->78us (beats baseline 85, not Marlin+fused 62); bs16 248 bs32 328 still slow
+2026-10-25T08:45	muse_moe_w4a16	v4g ncu bs16	-	-	GEMM1 130us SM-bound 72%; CUDA MoE path parked (parity ceiling)
