@@ -1,0 +1,6 @@
+{
+ "v12_asis": [],
+ "programs2400": [["    programs = 1200 if (not window and batch >= 8) else 300\n", "    programs = 2400 if (not window and batch >= 8) else 300\n"]],
+ "programs2400_cap128": [["    programs = 1200 if (not window and batch >= 8) else 300\n    target = min(64, max(1, -(-programs // (batch * hkv))))", "    programs = 2400 if (not window and batch >= 8) else 300\n    target = min(128, max(1, -(-programs // (batch * hkv))))"]],
+ "bn64_full": [["    block_n = 128 if block_q <= 16 else 64\n    max_len = table.shape[1] * page\n    chunk, nsplit = _plan(B, HKV, max_len, window, L, block_n)", "    block_n = (128 if window else 64) if block_q <= 16 else 64\n    max_len = table.shape[1] * page\n    chunk, nsplit = _plan(B, HKV, max_len, window, L, block_n)"]]
+}

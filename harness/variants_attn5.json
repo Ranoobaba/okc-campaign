@@ -1,0 +1,6 @@
+{
+ "p2400_c128": [["    programs = 1200 if (not window and batch >= 8) else 300\n    target = min(64, max(1, -(-programs // (batch * hkv))))", "    programs = 2400 if (not window and batch >= 8) else 300\n    target = min(128, max(1, -(-programs // (batch * hkv))))"]],
+ "p4800_c128": [["    programs = 1200 if (not window and batch >= 8) else 300\n    target = min(64, max(1, -(-programs // (batch * hkv))))", "    programs = 4800 if (not window and batch >= 8) else 300\n    target = min(128, max(1, -(-programs // (batch * hkv))))"]],
+ "p9600_c256": [["    programs = 1200 if (not window and batch >= 8) else 300\n    target = min(64, max(1, -(-programs // (batch * hkv))))", "    programs = 9600 if (not window and batch >= 8) else 300\n    target = min(256, max(1, -(-programs // (batch * hkv))))"]],
+ "p2400_b1too": [["    programs = 1200 if (not window and batch >= 8) else 300\n    target = min(64, max(1, -(-programs // (batch * hkv))))", "    programs = 2400 if not window else 300\n    target = min(128, max(1, -(-programs // (batch * hkv))))"]]
+}

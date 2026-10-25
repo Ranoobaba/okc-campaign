@@ -1,0 +1,90 @@
+{
+ "v12_asis": {
+  "decode 16 | batch 16, ctx 80000, heads tp8, layer sliding, page 1, spread agentic, dist soft": {
+   "us": 20.944000221788883,
+   "speedup": 1.5408708710858627,
+   "check": "OK relative L2 error 6.477e-02 (worst row 7.479e-02) [bound 0.150: 2.5 x the reference's 0.065 with FP8 E4M3 queries + 0.01"
+  },
+  "decode 16 | batch 16, ctx 80000, heads tp8, layer full, page 1, spread agentic, dist coherent": {
+   "us": 182.16000497341156,
+   "speedup": 1.211242850555411,
+   "check": "OK relative L2 error 3.819e-02 (worst row 5.783e-02) [bound 0.110: 2.5 x the reference's 0.038 with FP8 E4M3 queries + 0.01"
+  },
+  "decode 32 | batch 32, ctx 80000, heads tp8, layer sliding, page 1, spread agentic, dist soft": {
+   "us": 27.343999594449997,
+   "speedup": 1.4663546091135828,
+   "check": "OK relative L2 error 7.468e-02 (worst row 8.761e-02) [bound 0.150: 2.5 x the reference's 0.074 with FP8 E4M3 queries + 0.01"
+  },
+  "decode 32 | batch 32, ctx 80000, heads tp8, layer full, page 1, spread agentic, dist coherent": {
+   "us": 329.3280005455017,
+   "speedup": 1.2287810212359465,
+   "check": "OK relative L2 error 4.618e-02 (worst row 6.262e-02) [bound 0.130: 2.5 x the reference's 0.046 with FP8 E4M3 queries + 0.01"
+  }
+ },
+ "programs2400": {
+  "decode 16 | batch 16, ctx 80000, heads tp8, layer sliding, page 1, spread agentic, dist soft": {
+   "us": 21.200000308454037,
+   "speedup": 1.5222641224632938,
+   "check": "OK relative L2 error 6.477e-02 (worst row 7.479e-02) [bound 0.150: 2.5 x the reference's 0.065 with FP8 E4M3 queries + 0.01"
+  },
+  "decode 16 | batch 16, ctx 80000, heads tp8, layer full, page 1, spread agentic, dist coherent": {
+   "us": 171.29600048065186,
+   "speedup": 1.288062786416922,
+   "check": "OK relative L2 error 3.819e-02 (worst row 5.782e-02) [bound 0.110: 2.5 x the reference's 0.038 with FP8 E4M3 queries + 0.01"
+  },
+  "decode 32 | batch 32, ctx 80000, heads tp8, layer sliding, page 1, spread agentic, dist soft": {
+   "us": 27.05600019544363,
+   "speedup": 1.4819633185719028,
+   "check": "OK relative L2 error 7.468e-02 (worst row 8.761e-02) [bound 0.150: 2.5 x the reference's 0.074 with FP8 E4M3 queries + 0.01"
+  },
+  "decode 32 | batch 32, ctx 80000, heads tp8, layer full, page 1, spread agentic, dist coherent": {
+   "us": 308.4479868412018,
+   "speedup": 1.311961867464647,
+   "check": "OK relative L2 error 4.618e-02 (worst row 6.261e-02) [bound 0.130: 2.5 x the reference's 0.046 with FP8 E4M3 queries + 0.01"
+  }
+ },
+ "programs2400_cap128": {
+  "decode 16 | batch 16, ctx 80000, heads tp8, layer sliding, page 1, spread agentic, dist soft": {
+   "us": 20.960000343620777,
+   "speedup": 1.5396946248425227,
+   "check": "OK relative L2 error 6.477e-02 (worst row 7.479e-02) [bound 0.150: 2.5 x the reference's 0.065 with FP8 E4M3 queries + 0.01"
+  },
+  "decode 16 | batch 16, ctx 80000, heads tp8, layer full, page 1, spread agentic, dist coherent": {
+   "us": 169.98400539159775,
+   "speedup": 1.298004498557892,
+   "check": "OK relative L2 error 3.819e-02 (worst row 5.781e-02) [bound 0.110: 2.5 x the reference's 0.038 with FP8 E4M3 queries + 0.01"
+  },
+  "decode 32 | batch 32, ctx 80000, heads tp8, layer sliding, page 1, spread agentic, dist soft": {
+   "us": 27.328000403940678,
+   "speedup": 1.467213087099482,
+   "check": "OK relative L2 error 7.468e-02 (worst row 8.761e-02) [bound 0.150: 2.5 x the reference's 0.074 with FP8 E4M3 queries + 0.01"
+  },
+  "decode 32 | batch 32, ctx 80000, heads tp8, layer full, page 1, spread agentic, dist coherent": {
+   "us": 308.9120090007782,
+   "speedup": 1.3099911464784604,
+   "check": "OK relative L2 error 4.618e-02 (worst row 6.261e-02) [bound 0.130: 2.5 x the reference's 0.046 with FP8 E4M3 queries + 0.01"
+  }
+ },
+ "bn64_full": {
+  "decode 16 | batch 16, ctx 80000, heads tp8, layer sliding, page 1, spread agentic, dist soft": {
+   "us": 20.800000056624413,
+   "speedup": 1.5515384508613166,
+   "check": "OK relative L2 error 6.477e-02 (worst row 7.479e-02) [bound 0.150: 2.5 x the reference's 0.065 with FP8 E4M3 queries + 0.01"
+  },
+  "decode 16 | batch 16, ctx 80000, heads tp8, layer full, page 1, spread agentic, dist coherent": {
+   "us": 193.37600469589233,
+   "speedup": 1.1409895660434526,
+   "check": "OK relative L2 error 3.819e-02 (worst row 5.783e-02) [bound 0.110: 2.5 x the reference's 0.038 with FP8 E4M3 queries + 0.01"
+  },
+  "decode 32 | batch 32, ctx 80000, heads tp8, layer sliding, page 1, spread agentic, dist soft": {
+   "us": 27.952000498771667,
+   "speedup": 1.4344590412655325,
+   "check": "OK relative L2 error 7.468e-02 (worst row 8.761e-02) [bound 0.150: 2.5 x the reference's 0.074 with FP8 E4M3 queries + 0.01"
+  },
+  "decode 32 | batch 32, ctx 80000, heads tp8, layer full, page 1, spread agentic, dist coherent": {
+   "us": 346.0319936275482,
+   "speedup": 1.1694641081872414,
+   "check": "OK relative L2 error 4.618e-02 (worst row 6.262e-02) [bound 0.130: 2.5 x the reference's 0.046 with FP8 E4M3 queries + 0.01"
+  }
+ }
+}
