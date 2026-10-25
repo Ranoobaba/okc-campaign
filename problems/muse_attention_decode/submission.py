@@ -5,8 +5,10 @@
      on sliding layers, FP8 store of the new k and v at the token's cache row, normalized q to
      a BF16 scratch.
   2. _attn: split-KV flash decoding. One program per (request, kv head, key chunk): the group's
-     8 query heads x L block tokens are the rows of one tl.dot against gathered FP8 key tiles,
-     online softmax, partial (m, l, acc) out. Every key in the window / context is attended.
+     8 query heads x L block tokens are the rows of one FP8 x FP8 tl.dot against gathered FP8 key
+     tiles (queries rounded to E4M3 as FA3 does, qk_scale and k_scale folded into the softmax
+     scale), online softmax, P (BF16) x V (FP8 -> BF16), partial (m, l, acc) out. Every key in the
+     window / context is attended.
   3. _combine: merge the chunks, per-head RMSNorm, times sigmoid(gate), BF16 out.
 """
 
@@ -83,8 +85,8 @@ def _prep(qkv_ptr, pos_ptr, loc_ptr, kc_ptr, vc_ptr, q_out_ptr, k_scale_ptr, v_s
     if ROPE:
         qe, qo = _rope_pair(qe, qo, pos, theta, HALF)
     qbase = q_out_ptr + t * (HQ * D)
-    tl.store(qbase + hq[:, None] * D + de[None, :], qe.to(tl.bfloat16))
-    tl.store(qbase + hq[:, None] * D + de[None, :] + 1, qo.to(tl.bfloat16))
+    tl.store(qbase + hq[:, None] * D + de[None, :], qe.to(q_out_ptr.dtype.element_ty))
+    tl.store(qbase + hq[:, None] * D + de[None, :] + 1, qo.to(q_out_ptr.dtype.element_ty))
     # k: [HKV, D], then v.
     krow = row + HQ * D
     ke = tl.load(krow + hk[:, None] * D + de[None, :]).to(tl.float32)
@@ -145,9 +147,9 @@ def _attn(q_ptr, kc_ptr, vc_ptr, table_ptr, seqlens_ptr, k_scale_ptr, v_scale_pt
         return
     qrow = ((b * L + j) * HQ + h * GROUP + g).to(tl.int64)
     q = tl.load(q_ptr + qrow[:, None] * D + d[None, :], mask=rmask[:, None], other=0.0)
+    qk_scale = sm_scale
     if SCALED:
-        ks = tl.load(k_scale_ptr)
-        vs = tl.load(v_scale_ptr)
+        qk_scale = sm_scale * tl.load(k_scale_ptr)
     m_i = tl.full((BLOCK_Q,), NEG_INF, tl.float32)
     l_i = tl.zeros((BLOCK_Q,), tl.float32)
     acc = tl.zeros((BLOCK_Q, D), tl.float32)
@@ -158,10 +160,8 @@ def _attn(q_ptr, kc_ptr, vc_ptr, table_ptr, seqlens_ptr, k_scale_ptr, v_scale_pt
         page = tl.load(tbl + pos // PAGE, mask=kmask, other=0).to(tl.int64)
         rows = page * PAGE + (pos % PAGE)
         kptr = kc_ptr + rows[:, None] * (HKV * D) + h * D + d[None, :]
-        k = tl.load(kptr, mask=kmask[:, None], other=0.0).to(tl.float32)
-        if SCALED:
-            k = k * ks
-        sc = tl.dot(q, tl.trans(k.to(tl.bfloat16))) * sm_scale
+        k = tl.load(kptr, mask=kmask[:, None], other=0.0)
+        sc = tl.dot(q, tl.trans(k)) * qk_scale
         vis = kmask[None, :] & (pos[None, :] <= qpos[:, None])
         if WINDOW > 0:
             vis = vis & (pos[None, :] > qpos[:, None] - WINDOW)
@@ -172,11 +172,11 @@ def _attn(q_ptr, kc_ptr, vc_ptr, table_ptr, seqlens_ptr, k_scale_ptr, v_scale_pt
         p = tl.exp(sc - m_safe[:, None])
         l_i = l_i * alpha + tl.sum(p, 1)
         vptr = vc_ptr + rows[:, None] * (HKV * D) + h * D + d[None, :]
-        v = tl.load(vptr, mask=kmask[:, None], other=0.0).to(tl.float32)
-        if SCALED:
-            v = v * vs
+        v = tl.load(vptr, mask=kmask[:, None], other=0.0)
         acc = acc * alpha[:, None] + tl.dot(p.to(tl.bfloat16), v.to(tl.bfloat16))
         m_i = m_new
+    if SCALED:
+        acc = acc * tl.load(v_scale_ptr)
     tl.store(pm_ptr + pbase + r, m_i)
     tl.store(pl_ptr + pbase + r, l_i)
     tl.store(po_ptr + (pbase + r)[:, None] * D + d[None, :], acc)
@@ -240,9 +240,9 @@ def kernel_fn(data: Inputs) -> torch.Tensor:
     dev = qkv.device
     k_cache, v_cache = data["k_cache"], data["v_cache"]
     table = data["page_table"]
-    q_scratch = torch.empty((T, HQ, D), dtype=torch.bfloat16, device=dev)
+    q_scratch = torch.empty((T, HQ, D), dtype=torch.float8_e4m3fn, device=dev)
     _prep[(T,)](qkv, data["positions"], data["cache_loc"], k_cache, v_cache, q_scratch,
-                data["k_scale"], data["v_scale"], cfg["qk_scale_factor"], theta if theta else 1.0, RMS_EPS,
+                data["k_scale"], data["v_scale"], 1.0, theta if theta else 1.0, RMS_EPS,
                 HQ=HQ, HKV=HKV, D=D, HALF=D // 2, ROPE=bool(theta), SCALED=scaled, num_warps=4)
     group = HQ // HKV
     block_q = max(16, triton.next_power_of_2(L * group))
@@ -253,7 +253,7 @@ def kernel_fn(data: Inputs) -> torch.Tensor:
     pm = torch.empty((B * HKV * nsplit * block_q,), dtype=torch.float32, device=dev)
     pl = torch.empty_like(pm)
     _attn[(B, HKV, nsplit)](q_scratch, k_cache, v_cache, table, data["cache_seqlens"], data["k_scale"], data["v_scale"],
-                            po, pm, pl, cfg["sm_scale"], chunk,
+                            po, pm, pl, cfg["sm_scale"] * cfg["qk_scale_factor"], chunk,
                             L=L, GROUP=group, HQ=HQ, HKV=HKV, D=D, PAGE=page, MAX_PAGES=table.stride(0), WINDOW=window,
                             NSPLIT=nsplit, BLOCK_Q=block_q, BLOCK_N=block_n, SCALED=scaled, num_warps=4, num_stages=2)
     out = torch.empty((B, L, HQ * D), dtype=torch.bfloat16, device=dev)

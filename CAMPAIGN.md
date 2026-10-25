@@ -31,3 +31,15 @@ Targets: all four decode boards entered; overall top 50 (serving priority); then
   Headroom: m=1 gemv only reaches ~2.2 TB/s; needs a proper bandwidth GEMV (split-K or CUDA) to reach 1.6x+.
 - moe v1 compile error (Triton global constant); fixed, rerunning. attention v1 same bug; fixed, rerunning.
 - Devpost/product subagent (Opus) running in background for the Cal Hacks 8:30 am deadline.
+
+## 2026-10-25 05:10 PT: logged in, first real submission, attention/moe first results
+
+- Rayyan authorized the device flow and accepted the rules (version 2026-10-22.1, email yes) at 03:59 PT. Token in .okc_token.
+- proj v2 SUBMITTED scored: job f35dd5d974a44531 (first board entry; result pending).
+- moe v1: correct (5/5 tests, 5e-3 error) but x0.022: per-element duplicated byte loads along contiguous K
+  serialize into scalar loads. v2 (vectorized [BN, BK/2] byte tile, even/odd split dots, scale expansion via reshape) running.
+- attention v1: 16/16 tests pass with ~1e-3 error (very accurate). x0.96 geomean: sliding 1.3 to 1.9x, full decode
+  1.0 to 1.2x, verify full 0.31 to 0.68 (fp8->f32->bf16 conversions on 64-row tiles). v2 = fp8 x fp8 QK dot with
+  scales folded into scalars, running. Next: fuse prep into attn (2 launches) for the latency-bound sliding shapes.
+- Product subagent done: name Pitcrew, files in ~/inference-product (RESEARCH.md, DEVPOST.md, site/). Devpost
+  auto-fill blocked (Chrome remote debugging off); Rayyan pastes or enables chrome://inspect remote debugging.
