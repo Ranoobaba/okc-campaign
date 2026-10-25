@@ -24,3 +24,4 @@ date	problem	tag	ok	speedup	note
 2026-10-25T05:25	muse_moe_w4a16	sweep micro_moe1	ok	micro	atomic_add +7% at bs1 (62.8 vs 67.1us), neutral elsewhere; block16min +3% at bs16; block64 bad; workspace8 neutral; no_fp32_reduce neutral
 2026-10-25T05:35	muse_bf16_proj	v4_cublaslt	ok	1.1071	DISCARD (within noise of v2 1.1019): cuBLASLt heuristic algos do not beat the default at m 8..256; Triton/TMA/Lt all exhausted, CUDA skinny GEMM next
 2026-10-25T05:40	muse_moe_w4a16	v3b_tuned	ok	1.1607	KEEP (marginal, +0.8% vs v3, inside noise; not resubmitted)
+2026-10-25T05:55	muse_moe_w4a16	v4_cuda	ok	0.6301	CUDA W4A16 kernel CORRECT (3.7e-3) but 159us at bs1 (Marlin 67): suspect synchronous scale loads per chunk; v4b async
