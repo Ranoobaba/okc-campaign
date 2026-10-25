@@ -4,3 +4,4 @@
 {"at": "2026-10-25T04:43:06", "problem": "muse_decode_layer", "file": "problems/muse_decode_layer/submission.py", "mode": "run", "job_id": "fa8d57ba9f2746ca", "flags": []}
 {"at": "2026-10-25T06:22:18", "problem": "muse_decode_layer", "file": "problems/muse_decode_layer/submission.py", "mode": "run", "job_id": "01c1d827553b4333", "flags": []}
 {"at": "2026-10-25T06:22:18", "problem": "muse_moe_w4a16", "file": "problems/muse_moe_w4a16/submission.py", "mode": "run", "job_id": "3f4d681aa3a746be", "flags": []}
+{"at": "2026-10-25T06:54:47", "problem": "muse_moe_w4a16", "file": "problems/muse_moe_w4a16/submission.py", "mode": "run", "job_id": "82a28a6bddd74525", "flags": []}

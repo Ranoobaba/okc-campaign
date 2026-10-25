@@ -98,3 +98,6 @@ Where the next real gains are (needs CUDA at FA3/Marlin quality, multi-day): att
 roofline for everyone including FA3; MoE needs <2 instr/weight dequant; the layer needs ~10 launches, not ~20.
 Cheap remaining items: layer launch cuts, Marlin block-size tuning per shape, resubmitting v3b moe (+2%).
 - 07:50 PDT: decode_layer v4 REAL x1.1497 [1.132, 1.167]; moe v3b REAL x1.1483 (#695). Overall #701/1094.
+- 07:20 PDT: moe v3c (Marlin 16-row tiles above 8 tokens) REAL x1.2627 [1.244, 1.282] -> #624. Overall #652/1098.
+  Found by a 5-variant microbench of Marlin knobs: SGLang's block-size heuristic picks 64 at bs 128/256 where 16 is
+  1.25 to 1.40x faster. Layer v6 with it running on the replica.
