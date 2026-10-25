@@ -28,6 +28,9 @@ def token() -> str:
     t = os.environ.get("OKC_TOKEN")
     if t:
         return t
+    f = ROOT / ".okc_token"
+    if f.exists() and f.read_text().strip():
+        return f.read_text().strip()
     for p in (Path.home() / "Library/Application Support/okc/config.json", Path.home() / ".config/okc/config.json"):
         if p.exists():
             try:
