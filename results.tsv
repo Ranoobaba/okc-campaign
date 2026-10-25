@@ -8,3 +8,4 @@ date	problem	tag	ok	speedup	note
 2026-10-25T06:00	muse_moe_w4a16	v2_vecload	ok	0.3987	DISCARD: gemm1 92us + gemm2 70us per call at bs1 (0.46 TB/s); ALU-bound dequant + scale reshape shuffles; Marlin 46us
 2026-10-25T06:20	muse_attention_decode	v3a_warps8	ok	0.4837	DISCARD: 8 warps makes verify-full worse (0.27-0.37)
 2026-10-25T06:20	muse_attention_decode	v3c_rowsplit	ok	0.6955	DISCARD: per-token split re-reads KV 8x; verify-1 sliding 1.84x though
+2026-10-25T06:40	muse_moe_w4a16	v3_marlin_fusedfin	ok	1.1524	KEEP: Marlin GEMMs + fused Triton finalize; bs1 1.49x, bs8 1.29, bs16 1.23, bs>=32 parity

@@ -1,0 +1,183 @@
+{
+ "problem": "muse_moe_w4a16",
+ "gpu": "NVIDIA H200",
+ "torch": "2.14.1+cu130",
+ "tests": [
+  {
+   "case": "bs 4, sharding ep8",
+   "ok": true,
+   "msg": "relative L2 error 5.449e-03 (worst row 5.591e-03)",
+   "s": 246.3
+  },
+  {
+   "case": "bs 33, sharding ep8",
+   "ok": true,
+   "msg": "relative L2 error 5.522e-03 (worst row 5.773e-03)",
+   "s": 0.0
+  },
+  {
+   "case": "bs 257, sharding ep8",
+   "ok": true,
+   "msg": "relative L2 error 5.503e-03 (worst row 5.923e-03)",
+   "s": 0.1
+  },
+  {
+   "case": "bs 128, sharding ep8, dist skewed",
+   "ok": true,
+   "msg": "relative L2 error 5.301e-03 (worst row 5.644e-03)",
+   "s": 0.0
+  },
+  {
+   "case": "bs 1, sharding ep8",
+   "ok": true,
+   "msg": "relative L2 error 5.620e-03 (worst row 5.620e-03)",
+   "s": 0.0
+  }
+ ],
+ "shapes": [
+  {
+   "load": "decode 1",
+   "case": "bs 1, sharding ep8",
+   "weight": 60.0,
+   "base_us": 87.26,
+   "sub_us": 58.67,
+   "speedup": 1.4874,
+   "ci": [
+    1.4499,
+    1.5283
+   ],
+   "floor_us": 5.9,
+   "sub_min_us": 57.22,
+   "base_min_us": 84.54,
+   "fails": [],
+   "s": 0.3
+  },
+  {
+   "load": "decode 16",
+   "case": "bs 16, sharding ep8",
+   "weight": 60.0,
+   "base_us": 198.9,
+   "sub_us": 161.39,
+   "speedup": 1.2324,
+   "ci": [
+    1.2125,
+    1.35
+   ],
+   "floor_us": 5.95,
+   "sub_min_us": 127.9,
+   "base_min_us": 164.67,
+   "fails": [],
+   "s": 0.1
+  },
+  {
+   "load": "decode 32",
+   "case": "bs 32, sharding ep8",
+   "weight": 60.0,
+   "base_us": 208.38,
+   "sub_us": 210.44,
+   "speedup": 0.9902,
+   "ci": [
+    0.9865,
+    0.9971
+   ],
+   "floor_us": 6.01,
+   "sub_min_us": 162.75,
+   "base_min_us": 156.61,
+   "fails": [],
+   "s": 0.3
+  },
+  {
+   "load": "verify 1",
+   "case": "bs 8, sharding ep8",
+   "weight": 60.0,
+   "base_us": 160.22,
+   "sub_us": 124.58,
+   "speedup": 1.2861,
+   "ci": [
+    1.2512,
+    1.3151
+   ],
+   "floor_us": 5.93,
+   "sub_min_us": 104.99,
+   "base_min_us": 139.81,
+   "fails": [],
+   "s": 0.6
+  },
+  {
+   "load": "verify 16",
+   "case": "bs 128, sharding ep8",
+   "weight": 60.0,
+   "base_us": 471.58,
+   "sub_us": 470.64,
+   "speedup": 1.002,
+   "ci": [
+    1.0002,
+    1.003
+   ],
+   "floor_us": 13.03,
+   "sub_min_us": 408.96,
+   "base_min_us": 410.3,
+   "fails": [],
+   "s": 0.1
+  },
+  {
+   "load": "verify 32",
+   "case": "bs 256, sharding ep8",
+   "weight": 60.0,
+   "base_us": 608.48,
+   "sub_us": 607.79,
+   "speedup": 1.0011,
+   "ci": [
+    0.9995,
+    1.0016
+   ],
+   "floor_us": 26.06,
+   "sub_min_us": 509.63,
+   "base_min_us": 510.46,
+   "fails": [],
+   "s": 0.1
+  }
+ ],
+ "ok": true,
+ "prepare_s": {
+  "baseline": 7.6,
+  "submission": 0.0
+ },
+ "graph_fixed_us": 3.26,
+ "loads": {
+  "decode 1": {
+   "base_us": 5235.8,
+   "sub_us": 3520.2,
+   "speedup": 1.4874
+  },
+  "decode 16": {
+   "base_us": 11933.8,
+   "sub_us": 9683.5,
+   "speedup": 1.2324
+  },
+  "decode 32": {
+   "base_us": 12503.0,
+   "sub_us": 12626.3,
+   "speedup": 0.9902
+  },
+  "verify 1": {
+   "base_us": 9613.4,
+   "sub_us": 7474.8,
+   "speedup": 1.2861
+  },
+  "verify 16": {
+   "base_us": 28295.0,
+   "sub_us": 28238.2,
+   "speedup": 1.002
+  },
+  "verify 32": {
+   "base_us": 36508.8,
+   "sub_us": 36467.6,
+   "speedup": 1.0011
+  }
+ },
+ "speedup": 1.1524,
+ "total_s": 274.3,
+ "submission": "problems/muse_moe_w4a16/candidates/v3_marlin_fusedfin.py",
+ "tag": "v3_marlin_fusedfin"
+}

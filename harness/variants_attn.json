@@ -1,0 +1,10 @@
+{
+ "v2_asis": [],
+ "bn32": [["    block_n = 128 if block_q <= 16 else 64\n", "    block_n = 128 if block_q <= 16 else 32\n"]],
+ "bn128": [["    block_n = 128 if block_q <= 16 else 64\n", "    block_n = 128\n"]],
+ "split4x": [["    target = max(1, -(-300 // (batch * hkv)))\n", "    target = max(1, -(-1200 // (batch * hkv)))\n"]],
+ "nomask_diag": [["        sc = tl.where(vis, sc, NEG_INF)\n", "        sc = tl.where(kmask[None, :], sc, NEG_INF)\n"]],
+ "bf16k_diag": [["        k = tl.load(kptr, mask=kmask[:, None], other=0.0)\n        sc = tl.dot(q, tl.trans(k)) * qk_scale\n", "        k = tl.load(kptr, mask=kmask[:, None], other=0.0).to(tl.bfloat16)\n        sc = tl.dot(q.to(tl.bfloat16), tl.trans(k)) * qk_scale\n"]],
+ "stages1": [["NSPLIT=nsplit, BLOCK_Q=block_q, BLOCK_N=block_n, SCALED=scaled, num_warps=4, num_stages=2)", "NSPLIT=nsplit, BLOCK_Q=block_q, BLOCK_N=block_n, SCALED=scaled, num_warps=4, num_stages=1)"]],
+ "stages3": [["NSPLIT=nsplit, BLOCK_Q=block_q, BLOCK_N=block_n, SCALED=scaled, num_warps=4, num_stages=2)", "NSPLIT=nsplit, BLOCK_Q=block_q, BLOCK_N=block_n, SCALED=scaled, num_warps=4, num_stages=3)"]]
+}

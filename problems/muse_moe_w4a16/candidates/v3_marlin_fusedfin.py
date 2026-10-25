@@ -105,6 +105,17 @@ def _experts_marlin(x, local_ids, topk_weights, bank, ws, top_k):
     return y.view(num_tokens * top_k, size_k)
 
 
+def _moe_core(x, local_ids, g, st, top_k, count, I, e_off=0):
+    """Layer entry point: x [M, H] bf16, local_ids [M, top_k] int32 (-1 = elsewhere), g [M, top_k] fp32."""
+    bank = st["banks"][(e_off, count)]
+    M, H = x.shape
+    y = _experts_marlin(x, local_ids.contiguous(), g, bank, st["workspace"], top_k)
+    out = torch.empty((M, H), dtype=torch.bfloat16, device=x.device)
+    _finalize[(M,)](y, local_ids, g, st["post_norm_w"], out, POST_NORM_EPS, H=H, TOP_K=top_k,
+                    BLOCK_H=triton.next_power_of_2(H), num_warps=8)
+    return out
+
+
 def kernel_fn(data, state):
     cfg = data["config"]
     bank = state["banks"][(cfg["local_start"], cfg["local_count"])]
