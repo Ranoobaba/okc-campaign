@@ -273,15 +273,15 @@ def _attn_window(qkv_ptr, pos_ptr, loc_ptr, kc_ptr, vc_ptr, table_ptr, seqlens_p
         rows = page * PAGE + (pos % PAGE)
         k = tl.load(kc_ptr + rows[:, None] * (HKV * D) + h * D + d[None, :], mask=kmask[:, None], other=0.0)
         v = tl.load(vc_ptr + rows[:, None] * (HKV * D) + h * D + d[None, :], mask=kmask[:, None], other=0.0)
-        sc = tl.dot(q, tl.trans(k)) * qk_scale
-        vis = kmask[None, :] & (pos[None, :] <= qpos[:, None]) & (pos[None, :] > qpos[:, None] - WINDOW)
-        sc = tl.where(vis, sc, NEG_INF)
-        m_new = tl.maximum(m_i, tl.max(sc, 1))
-        m_safe = tl.where(m_new == NEG_INF, 0.0, m_new)
-        alpha = tl.exp(m_i - m_safe)
-        p = tl.exp(sc - m_safe[:, None])
-        l_i = l_i * alpha + tl.sum(p, 1)
-        acc = acc * alpha[:, None] + tl.dot(p.to(tl.bfloat16), v.to(tl.bfloat16))
+        sct = tl.dot(q, tl.trans(k)) * qk_scale
+        vist = kmask[None, :] & (pos[None, :] <= qpos[:, None]) & (pos[None, :] > qpos[:, None] - WINDOW)
+        sct = tl.where(vist, sct, NEG_INF)
+        m_new = tl.maximum(m_i, tl.max(sct, 1))
+        m_safe2 = tl.where(m_new == NEG_INF, 0.0, m_new)
+        alpha = tl.exp(m_i - m_safe2)
+        pt = tl.exp(sct - m_safe2[:, None])
+        l_i = l_i * alpha + tl.sum(pt, 1)
+        acc = acc * alpha[:, None] + tl.dot(pt.to(tl.bfloat16), v.to(tl.bfloat16))
         m_i = m_new
     o = acc / tl.maximum(l_i, 1e-30)[:, None]
     if SCALED:
