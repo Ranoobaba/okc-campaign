@@ -99,3 +99,6 @@ Durable facts across sessions. Read before designing anything.
   resident warps and an LDS-heavy inner loop (1-byte scattered smem loads for the packed weights).
 - Fix direction: 8 rows per warp (BN 32, 4 warps, ~1000 blocks), 4 stages (18 KB smem -> 11 blocks/SM), and a
   lossless repack so each lane's 8 bytes per chunk are contiguous (one 64-bit LDS instead of 8 byte loads).
+- v7 (one launch, unrolled merge): sliding b1 12.8 us = identical to the 3-launch v6. The time is ~6 dependent
+  global round trips, not launch count. Next: no split on sliding layers (one program per (b, h) streams the whole
+  2048-key window with pipelined tile loads and writes the output itself): 4 round trips.
