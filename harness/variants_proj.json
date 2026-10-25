@@ -1,0 +1,5 @@
+{
+ "race": [],
+ "force_cuda": [["    cfg = _pick(state[\"cfgs\"], layer, m, n)\n", "    cfg = _pick(state[\"cfgs\"], layer, m, n)\n    if layer != \"router\" and 1 < m <= 32:\n        cfg = {\"kind\": \"cuda\"}\n"]],
+ "force_torch": [["    cfg = _pick(state[\"cfgs\"], layer, m, n)\n", "    cfg = _pick(state[\"cfgs\"], layer, m, n)\n    if layer != \"router\":\n        cfg = {\"kind\": \"torch\"}\n"]]
+}

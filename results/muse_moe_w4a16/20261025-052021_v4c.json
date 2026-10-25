@@ -1,0 +1,125 @@
+{
+ "problem": "muse_moe_w4a16",
+ "gpu": "NVIDIA H200",
+ "torch": "2.14.1+cu130",
+ "tests": [
+  {
+   "case": "bs 4, sharding ep8",
+   "ok": true,
+   "msg": "relative L2 error 3.750e-03 (worst row 3.784e-03)",
+   "s": 1.7
+  },
+  {
+   "case": "bs 33, sharding ep8",
+   "ok": true,
+   "msg": "relative L2 error 5.522e-03 (worst row 5.773e-03)",
+   "s": 231.8
+  },
+  {
+   "case": "bs 257, sharding ep8",
+   "ok": true,
+   "msg": "relative L2 error 5.503e-03 (worst row 5.923e-03)",
+   "s": 0.2
+  },
+  {
+   "case": "bs 128, sharding ep8, dist skewed",
+   "ok": true,
+   "msg": "relative L2 error 5.302e-03 (worst row 5.636e-03)",
+   "s": 0.0
+  },
+  {
+   "case": "bs 1, sharding ep8",
+   "ok": true,
+   "msg": "relative L2 error 3.737e-03 (worst row 3.737e-03)",
+   "s": 0.0
+  }
+ ],
+ "shapes": [
+  {
+   "load": "decode 1",
+   "case": "bs 1, sharding ep8",
+   "weight": 60.0,
+   "base_us": 86.21,
+   "sub_us": 222.96,
+   "speedup": 0.3867,
+   "ci": [
+    0.3658,
+    0.3957
+   ],
+   "floor_us": 5.9,
+   "sub_min_us": 209.79,
+   "base_min_us": 84.38,
+   "fails": [],
+   "s": 0.2
+  },
+  {
+   "load": "decode 16",
+   "case": "bs 16, sharding ep8",
+   "weight": 60.0,
+   "base_us": 191.01,
+   "sub_us": 407.04,
+   "speedup": 0.4693,
+   "ci": [
+    0.4657,
+    0.4791
+   ],
+   "floor_us": 5.95,
+   "sub_min_us": 339.1,
+   "base_min_us": 173.54,
+   "fails": [],
+   "s": 0.0
+  },
+  {
+   "load": "decode 32",
+   "case": "bs 32, sharding ep8",
+   "weight": 60.0,
+   "base_us": 197.54,
+   "sub_us": 490.3,
+   "speedup": 0.4029,
+   "ci": [
+    0.3984,
+    0.4135
+   ],
+   "floor_us": 6.01,
+   "sub_min_us": 409.41,
+   "base_min_us": 155.97,
+   "fails": [],
+   "s": 0.3
+  }
+ ],
+ "ok": true,
+ "prepare_s": {
+  "baseline": 6.8,
+  "submission": 43.9
+ },
+ "graph_fixed_us": 3.36,
+ "loads": {
+  "decode 1": {
+   "base_us": 5172.5,
+   "sub_us": 13377.4,
+   "speedup": 0.3867
+  },
+  "decode 16": {
+   "base_us": 11460.5,
+   "sub_us": 24422.5,
+   "speedup": 0.4693
+  },
+  "decode 32": {
+   "base_us": 11852.2,
+   "sub_us": 29417.7,
+   "speedup": 0.4029
+  }
+ },
+ "speedup": 0.4181,
+ "profile": {
+  "bs 1, sharding ep8 | submission": "-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  \n                                                   Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg     Self CUDA   Self CUDA %    CUDA total  CUDA time avg    # of Calls  \n-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  \nvoid w4a16_kernel<true>(__nv_bfloat16 const*, long, ...         0.00%       0.000us         0.00%       0.000us       0.000us     699.528us        61.45%     699.528us     139.906us             5  \nvoid w4a16_kernel<false>(__nv_bfloat16 const*, long,...         0.00%       0.000us         0.00%       0.000us       0.000us     382.628us        33.61%     382.628us      76.526us             5  \nvoid moe_align_block_size_small_batch_expert_kernel<...         0.00%       0.000us         0.00%       0.000us       0.000us      22.112us         1.94%      22.112us       4.422us             5  \n                                              _finalize         0.00%       0.000us         0.00%       0.000us       0.000us      18.786us         1.65%      18.786us       3.757us             5  \nvoid at::native::index_elementwise_kernel<128, 4, at...         0.00%       0.000us         0.00%       0.000us       0.000us       9.088us         0.80%       9.088us       1.818us             5  \nvoid at::native::unrolled_elementwise_kernel<at::nat...         0.00%       0.000us         0.00%       0.000us       0.000us       6.206us         0.55%       6.206us       1.241us             5  \n                                Activity Buffer Request        71.15%       1.403ms        71.15%       1.403ms       1.403ms       0.000us         0.00%       0.000us       0.000us             1  \n                                       cudaLaunchKernel         7.79%     153.709us         7.79%     153.709us       6.148us       0.000us         0.00%       0.000us       0.000us            25  \n                                       cuLaunchKernelEx         1.18%      23.240us         1.18%      23.240us       4.648us       0.000us         0.00%       0.000us       0.000us             5  \n                                  cudaDeviceSynchronize        19.88%     392.160us        19.88%     392.160us     196.080us       0.000us         0.00%       0.000us       0.000us             2  \n-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  \nSelf CPU time total: 1.972ms\nSelf CUDA time total: 1.138ms\n",
+  "bs 1, sharding ep8 | baseline": "-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  \n                                                   Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg     Self CUDA   Self CUDA %    CUDA total  CUDA time avg    # of Calls  \n-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  \nvoid sglang::device::marlin_moe::Marlin<__nv_bfloat1...         0.00%       0.000us         0.00%       0.000us       0.000us     227.558us        56.82%     227.558us      22.756us            10  \nvoid at::native::reduce_kernel<512, 1, at::native::R...         0.00%       0.000us         0.00%       0.000us       0.000us      28.833us         7.20%      28.833us       5.767us             5  \nvoid at::native::unrolled_elementwise_kernel<at::nat...         0.00%       0.000us         0.00%       0.000us       0.000us      28.129us         7.02%      28.129us       2.813us            10  \nvoid at::native::elementwise_kernel<128, 2, at::nati...         0.00%       0.000us         0.00%       0.000us       0.000us      24.545us         6.13%      24.545us       1.636us            15  \nvoid at::native::reduce_kernel<128, 4, at::native::R...         0.00%       0.000us         0.00%       0.000us       0.000us      21.858us         5.46%      21.858us       4.372us             5  \nvoid at::native::elementwise_kernel<128, 4, at::nati...         0.00%       0.000us         0.00%       0.000us       0.000us      13.344us         3.33%      13.344us       2.669us             5  \nvoid at::native::index_elementwise_kernel<128, 4, at...         0.00%       0.000us         0.00%       0.000us       0.000us       8.320us         2.08%       8.320us       1.664us             5  \nvoid sglang::act_and_mul_kernel<__nv_bfloat16, (sgla...         0.00%       0.000us         0.00%       0.000us       0.000us       8.161us         2.04%       8.161us       1.632us             5  \n                          _moe_align_small_numel_kernel         0.00%       0.000us         0.00%       0.000us       0.000us       6.208us         1.55%       6.208us       1.242us             5  \nvoid at::native::unrolled_elementwise_kernel<at::nat...         0.00%       0.000us         0.00%       0.000us       0.000us       6.080us         1.52%       6.080us       1.216us             5  \nvoid at::native::vectorized_elementwise_kernel<4, at...         0.00%       0.000us         0.00%       0.000us       0.000us       5.825us         1.45%       5.825us       1.165us             5  \nvoid at::native::vectorized_elementwise_kernel<4, at...         0.00%       0.000us         0.00%       0.000us       0.000us       4.673us         1.17%       4.673us       0.935us             5  \nvoid at::native::vectorized_elementwise_kernel<8, at...         0.00%       0.000us         0.00%       0.000us       0.000us       4.640us         1.16%       4.640us       0.928us             5  \nvoid at::native::vectorized_elementwise_kernel<8, at...         0.00%       0.000us         0.00%       0.000us       0.000us       4.639us         1.16%       4.639us       0.928us             5  \nvoid at::native::vectorized_elementwise_kernel<4, at...         0.00%       0.000us         0.00%       0.000us       0.000us       4.257us         1.06%       4.257us       0.851us             5  \nvoid at::native::vectorized_elementwise_kernel<8, at...         0.00%       0.000us         0.00%       0.000us       0.000us       3.424us         0.85%       3.424us       0.685us             5  \n                                Activity Buffer Request        72.67%       1.477ms        72.67%       1.477ms       1.477ms       0.000us         0.00%       0.000us       0.000us             1  \n                                       cudaLaunchKernel        20.96%     425.900us        20.96%     425.900us       4.732us       0.000us         0.00%       0.000us       0.000us            90  \n-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  \nSelf CPU time total: 2.032ms\nSelf CUDA time total: 400.494us\n",
+  "bs 16, sharding ep8 | submission": "-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  \n                                                   Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg     Self CUDA   Self CUDA %    CUDA total  CUDA time avg    # of Calls  \n-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  \nvoid w4a16_kernel<true>(__nv_bfloat16 const*, long, ...         0.00%       0.000us         0.00%       0.000us       0.000us       1.191ms        60.93%       1.191ms     238.214us             5  \nvoid w4a16_kernel<false>(__nv_bfloat16 const*, long,...         0.00%       0.000us         0.00%       0.000us       0.000us     698.238us        35.72%     698.238us     139.648us             5  \nvoid moe_align_block_size_small_batch_expert_kernel<...         0.00%       0.000us         0.00%       0.000us       0.000us      26.848us         1.37%      26.848us       5.370us             5  \n                                              _finalize         0.00%       0.000us         0.00%       0.000us       0.000us      21.792us         1.11%      21.792us       4.358us             5  \nvoid at::native::index_elementwise_kernel<128, 4, at...         0.00%       0.000us         0.00%       0.000us       0.000us       9.825us         0.50%       9.825us       1.965us             5  \nvoid at::native::unrolled_elementwise_kernel<at::nat...         0.00%       0.000us         0.00%       0.000us       0.000us       7.071us         0.36%       7.071us       1.414us             5  \n                                Activity Buffer Request        12.44%     195.473us        12.44%     195.473us     195.473us       0.000us         0.00%       0.000us       0.000us             1  \n                                       cudaLaunchKernel         8.55%     134.387us         8.55%     134.387us       5.375us       0.000us         0.00%       0.000us       0.000us            25  \n                                       cuLaunchKernelEx         1.22%      19.193us         1.22%      19.193us       3.839us       0.000us         0.00%       0.000us       0.000us             5  \n                                  cudaDeviceSynchronize        77.78%       1.222ms        77.78%       1.222ms     611.077us       0.000us         0.00%       0.000us       0.000us             2  \n-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  \nSelf CPU time total: 1.571ms\nSelf CUDA time total: 1.955ms\n",
+  "bs 16, sharding ep8 | baseline": "-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  \n                                                   Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg     Self CUDA   Self CUDA %    CUDA total  CUDA time avg    # of Calls  \n-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  \nvoid sglang::device::marlin_moe::Marlin<__nv_bfloat1...         0.00%       0.000us         0.00%       0.000us       0.000us     646.291us        72.85%     646.291us      64.629us            10  \nvoid at::native::reduce_kernel<512, 1, at::native::R...         0.00%       0.000us         0.00%       0.000us       0.000us      44.605us         5.03%      44.605us       8.921us             5  \nvoid at::native::elementwise_kernel<128, 2, at::nati...         0.00%       0.000us         0.00%       0.000us       0.000us      43.230us         4.87%      43.230us       2.882us            15  \nvoid at::native::unrolled_elementwise_kernel<at::nat...         0.00%       0.000us         0.00%       0.000us       0.000us      31.774us         3.58%      31.774us       3.177us            10  \nvoid at::native::reduce_kernel<128, 4, at::native::R...         0.00%       0.000us         0.00%       0.000us       0.000us      24.384us         2.75%      24.384us       4.877us             5  \nvoid at::native::elementwise_kernel<128, 4, at::nati...         0.00%       0.000us         0.00%       0.000us       0.000us      16.447us         1.85%      16.447us       3.289us             5  \nvoid moe_align_block_size_kernel<int>(int const*, in...         0.00%       0.000us         0.00%       0.000us       0.000us      13.376us         1.51%      13.376us       2.675us             5  \nvoid sglang::act_and_mul_kernel<__nv_bfloat16, (sgla...         0.00%       0.000us         0.00%       0.000us       0.000us      11.039us         1.24%      11.039us       2.208us             5  \nvoid at::native::index_elementwise_kernel<128, 4, at...         0.00%       0.000us         0.00%       0.000us       0.000us       8.896us         1.00%       8.896us       1.779us             5  \nvoid at::native::vectorized_elementwise_kernel<4, at...         0.00%       0.000us         0.00%       0.000us       0.000us       8.096us         0.91%       8.096us       1.619us             5  \nvoid at::native::unrolled_elementwise_kernel<at::nat...         0.00%       0.000us         0.00%       0.000us       0.000us       6.817us         0.77%       6.817us       1.363us             5  \nvoid at::native::vectorized_elementwise_kernel<8, at...         0.00%       0.000us         0.00%       0.000us       0.000us       6.529us         0.74%       6.529us       1.306us             5  \nvoid count_and_sort_expert_tokens_kernel<int>(int co...         0.00%       0.000us         0.00%       0.000us       0.000us       6.176us         0.70%       6.176us       1.235us             5  \nvoid at::native::vectorized_elementwise_kernel<8, at...         0.00%       0.000us         0.00%       0.000us       0.000us       5.696us         0.64%       5.696us       1.139us             5  \nvoid at::native::vectorized_elementwise_kernel<4, at...         0.00%       0.000us         0.00%       0.000us       0.000us       5.120us         0.58%       5.120us       1.024us             5  \nvoid at::native::vectorized_elementwise_kernel<4, at...         0.00%       0.000us         0.00%       0.000us       0.000us       4.768us         0.54%       4.768us       0.954us             5  \nvoid at::native::vectorized_elementwise_kernel<8, at...         0.00%       0.000us         0.00%       0.000us       0.000us       3.872us         0.44%       3.872us       0.774us             5  \n                                Activity Buffer Request        64.46%       1.440ms        64.46%       1.440ms       1.440ms       0.000us         0.00%       0.000us       0.000us             1  \n-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  \nSelf CPU time total: 2.234ms\nSelf CUDA time total: 887.116us\n",
+  "bs 32, sharding ep8 | submission": "-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  \n                                                   Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg     Self CUDA   Self CUDA %    CUDA total  CUDA time avg    # of Calls  \n-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  \nvoid w4a16_kernel<true>(__nv_bfloat16 const*, long, ...         0.00%       0.000us         0.00%       0.000us       0.000us       1.931ms        61.30%       1.931ms     386.190us             5  \nvoid w4a16_kernel<false>(__nv_bfloat16 const*, long,...         0.00%       0.000us         0.00%       0.000us       0.000us       1.143ms        36.27%       1.143ms     228.511us             5  \nvoid moe_align_block_size_small_batch_expert_kernel<...         0.00%       0.000us         0.00%       0.000us       0.000us      32.610us         1.04%      32.610us       6.522us             5  \n                                              _finalize         0.00%       0.000us         0.00%       0.000us       0.000us      22.914us         0.73%      22.914us       4.583us             5  \nvoid at::native::index_elementwise_kernel<128, 4, at...         0.00%       0.000us         0.00%       0.000us       0.000us      11.521us         0.37%      11.521us       2.304us             5  \nvoid at::native::unrolled_elementwise_kernel<at::nat...         0.00%       0.000us         0.00%       0.000us       0.000us       9.664us         0.31%       9.664us       1.933us             5  \n                                Activity Buffer Request        31.26%       1.309ms        31.26%       1.309ms       1.309ms       0.000us         0.00%       0.000us       0.000us             1  \n                                       cudaLaunchKernel         8.48%     354.854us         8.48%     354.854us      14.194us       0.000us         0.00%       0.000us       0.000us            25  \n                                       cuLaunchKernelEx         0.53%      22.022us         0.53%      22.022us       4.404us       0.000us         0.00%       0.000us       0.000us             5  \n                                  cudaDeviceSynchronize        59.73%       2.500ms        59.73%       2.500ms       1.250ms       0.000us         0.00%       0.000us       0.000us             2  \n-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  \nSelf CPU time total: 4.186ms\nSelf CUDA time total: 3.150ms\n",
+  "bs 32, sharding ep8 | baseline": "-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  \n                                                   Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg     Self CUDA   Self CUDA %    CUDA total  CUDA time avg    # of Calls  \n-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  \nvoid sglang::device::marlin_moe::Marlin<__nv_bfloat1...         0.00%       0.000us         0.00%       0.000us       0.000us       1.198ms        94.30%       1.198ms     119.780us            10  \n                  _post_expert_norm_weighted_sum_kernel         0.00%       0.000us         0.00%       0.000us       0.000us      20.194us         1.59%      20.194us       4.039us             5  \nvoid moe_align_block_size_kernel<int>(int const*, in...         0.00%       0.000us         0.00%       0.000us       0.000us      13.474us         1.06%      13.474us       2.695us             5  \nvoid sglang::act_and_mul_kernel<__nv_bfloat16, (sgla...         0.00%       0.000us         0.00%       0.000us       0.000us      12.160us         0.96%      12.160us       2.432us             5  \nvoid at::native::index_elementwise_kernel<128, 4, at...         0.00%       0.000us         0.00%       0.000us       0.000us      11.042us         0.87%      11.042us       2.208us             5  \nvoid at::native::unrolled_elementwise_kernel<at::nat...         0.00%       0.000us         0.00%       0.000us       0.000us       9.601us         0.76%       9.601us       1.920us             5  \nvoid count_and_sort_expert_tokens_kernel<int>(int co...         0.00%       0.000us         0.00%       0.000us       0.000us       5.985us         0.47%       5.985us       1.197us             5  \n                                Activity Buffer Request        69.21%       1.456ms        69.21%       1.456ms       1.456ms       0.000us         0.00%       0.000us       0.000us             1  \n                                       cudaLaunchKernel        16.07%     337.969us        16.07%     337.969us      11.266us       0.000us         0.00%       0.000us       0.000us            30  \n                                 cudaDeviceGetAttribute         0.26%       5.496us         0.26%       5.496us       0.275us       0.000us         0.00%       0.000us       0.000us            20  \n                                  cudaFuncGetAttributes         1.97%      41.447us         1.97%      41.447us       2.072us       0.000us         0.00%       0.000us       0.000us            20  \n                                   cudaFuncSetAttribute         0.34%       7.201us         0.34%       7.201us       0.720us       0.000us         0.00%       0.000us       0.000us            10  \n                                    cudaLaunchKernelExC         1.09%      22.940us         1.09%      22.940us       4.588us       0.000us         0.00%       0.000us       0.000us             5  \n                                       cuLaunchKernelEx         0.93%      19.539us         0.93%      19.539us       3.908us       0.000us         0.00%       0.000us       0.000us             5  \n                                  cudaDeviceSynchronize        10.13%     213.002us        10.13%     213.002us     106.501us       0.000us         0.00%       0.000us       0.000us             2  \n-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  \nSelf CPU time total: 2.103ms\nSelf CUDA time total: 1.270ms\n"
+ },
+ "total_s": 308.7,
+ "submission": "/Users/rayyanscomputer/okc-campaign/problems/muse_moe_w4a16/candidates/v4c_bn32_s8.py",
+ "tag": "v4c"
+}

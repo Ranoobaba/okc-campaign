@@ -1,0 +1,308 @@
+{
+ "race": {
+  "decode 16 | m 16, layer qkv_gate": {
+   "us": 22.14400004595518,
+   "speedup": 0.995664748940139,
+   "check": "OK relative L2 error 8.619e-05 (worst row 1.638e-04); 2 probe rows exact to 0.0e+00"
+  },
+  "decode 16 | m 16, layer o": {
+   "us": 12.384000234305859,
+   "speedup": 1.0503875660015827,
+   "check": "OK relative L2 error 3.589e-05 (worst row 1.774e-04); 3 probe rows exact to 0.0e+00"
+  },
+  "decode 16 | m 16, layer pooler": {
+   "us": 31.599998474121094,
+   "speedup": 0.9893671250188623,
+   "check": "OK relative L2 error 8.334e-05 (worst row 2.169e-04); 4 probe rows exact to 0.0e+00"
+  },
+  "decode 16 | m 16, layer unpooler": {
+   "us": 28.84799987077713,
+   "speedup": 1.008874101768299,
+   "check": "OK relative L2 error 1.407e-04 (worst row 2.637e-04); 2 probe rows exact to 0.0e+00"
+  },
+  "decode 16 | m 16, layer router": {
+   "us": 13.631999958306551,
+   "speedup": 1.62323943601832,
+   "check": "OK relative L2 error 3.209e-06 (worst row 3.579e-06); 3 probe rows exact to 2.7e-06"
+  },
+  "decode 32 | m 32, layer qkv_gate": {
+   "us": 22.208000533282757,
+   "speedup": 1.0007204246273924,
+   "check": "OK relative L2 error 1.546e-04 (worst row 4.597e-04); 6 probe rows exact to 0.0e+00"
+  },
+  "decode 32 | m 32, layer o": {
+   "us": 13.008000329136848,
+   "speedup": 1.003689993308625,
+   "check": "OK relative L2 error 6.258e-05 (worst row 1.235e-04); 3 probe rows exact to 0.0e+00"
+  },
+  "decode 32 | m 32, layer pooler": {
+   "us": 32.15999901294708,
+   "speedup": 1.0064676532199437,
+   "check": "OK relative L2 error 9.031e-05 (worst row 2.083e-04); 7 probe rows exact to 0.0e+00"
+  },
+  "decode 32 | m 32, layer unpooler": {
+   "us": 28.79999950528145,
+   "speedup": 1.03055556238238,
+   "check": "OK relative L2 error 1.255e-04 (worst row 2.203e-04); 7 probe rows exact to 0.0e+00"
+  },
+  "decode 32 | m 32, layer router": {
+   "us": 13.823999557644129,
+   "speedup": 1.5879629787138148,
+   "check": "OK relative L2 error 3.240e-06 (worst row 3.736e-06); 5 probe rows exact to 2.8e-06"
+  },
+  "verify 1 | m 8, layer qkv_gate": {
+   "us": 22.23999984562397,
+   "speedup": 1.0395683537591973,
+   "check": "OK relative L2 error 5.261e-05 (worst row 8.451e-05); 3 probe rows exact to 0.0e+00"
+  },
+  "verify 1 | m 8, layer o": {
+   "us": 12.527999933809042,
+   "speedup": 1.0089400054081832,
+   "check": "OK relative L2 error 8.004e-05 (worst row 1.906e-04); 1 probe rows exact to 0.0e+00"
+  },
+  "verify 1 | m 8, layer pooler": {
+   "us": 31.16799984127283,
+   "speedup": 0.9953798714740179,
+   "check": "OK relative L2 error 8.819e-05 (worst row 1.285e-04); 1 probe rows exact to 0.0e+00"
+  },
+  "verify 1 | m 8, layer unpooler": {
+   "us": 12.527999933809042,
+   "speedup": 0.9897828828217706,
+   "check": "OK relative L2 error 2.943e-06 (worst row 7.856e-06); 1 probe rows exact to 0.0e+00"
+  },
+  "verify 1 | m 8, layer router": {
+   "us": 13.680000323802233,
+   "speedup": 2.360233861356231,
+   "check": "OK relative L2 error 3.427e-06 (worst row 3.517e-06); 2 probe rows exact to 2.3e-06"
+  },
+  "verify 16 | m 128, layer qkv_gate": {
+   "us": 25.824000127613544,
+   "speedup": 1.0006195473369832,
+   "check": "OK relative L2 error 1.547e-04 (worst row 3.668e-04); 21 probe rows exact to 0.0e+00"
+  },
+  "verify 16 | m 128, layer o": {
+   "us": 13.72799975797534,
+   "speedup": 0.9731935060465923,
+   "check": "OK relative L2 error 5.461e-05 (worst row 1.892e-04); 18 probe rows exact to 0.0e+00"
+  },
+  "verify 16 | m 128, layer pooler": {
+   "us": 31.840000301599503,
+   "speedup": 1.0085426615350326,
+   "check": "OK relative L2 error 2.064e-04 (worst row 4.322e-04); 16 probe rows exact to 0.0e+00"
+  },
+  "verify 16 | m 128, layer unpooler": {
+   "us": 29.935999773442745,
+   "speedup": 1.0165686816960238,
+   "check": "OK relative L2 error 1.374e-04 (worst row 2.785e-04); 13 probe rows exact to 0.0e+00"
+  },
+  "verify 16 | m 128, layer router": {
+   "us": 20.383999682962894,
+   "speedup": 1.1295133725249693,
+   "check": "OK relative L2 error 3.265e-06 (worst row 3.878e-06); 15 probe rows exact to 2.9e-06"
+  }
+ },
+ "force_cuda": {
+  "decode 16 | m 16, layer qkv_gate": {
+   "us": 33.61600078642368,
+   "speedup": 0.655878145242988,
+   "check": "OK relative L2 error 6.775e-05 (worst row 1.583e-04); 2 probe rows exact to 0.0e+00"
+  },
+  "decode 16 | m 16, layer o": {
+   "us": 17.184000462293625,
+   "speedup": 0.756983211913818,
+   "check": "OK relative L2 error 1.531e-05 (worst row 8.724e-05); 3 probe rows exact to 0.0e+00"
+  },
+  "decode 16 | m 16, layer pooler": {
+   "us": 44.35200057923794,
+   "speedup": 0.7049061876044646,
+   "check": "OK relative L2 error 6.769e-05 (worst row 1.708e-04); 4 probe rows exact to 0.0e+00"
+  },
+  "decode 16 | m 16, layer unpooler": {
+   "us": 46.25600017607212,
+   "speedup": 0.6291940471865002,
+   "check": "OK relative L2 error 7.263e-05 (worst row 1.865e-04); 2 probe rows exact to 0.0e+00"
+  },
+  "decode 16 | m 16, layer router": {
+   "us": 13.855999801307917,
+   "speedup": 1.5969977079556934,
+   "check": "OK relative L2 error 3.211e-06 (worst row 3.588e-06); 3 probe rows exact to 2.7e-06"
+  },
+  "decode 32 | m 32, layer qkv_gate": {
+   "us": 42.30399988591671,
+   "speedup": 0.5253403882310097,
+   "check": "OK relative L2 error 1.432e-04 (worst row 4.597e-04); 6 probe rows exact to 0.0e+00"
+  },
+  "decode 32 | m 32, layer o": {
+   "us": 20.336000248789787,
+   "speedup": 0.6420141425837624,
+   "check": "OK relative L2 error 3.196e-05 (worst row 9.777e-05); 3 probe rows exact to 0.0e+00"
+  },
+  "decode 32 | m 32, layer pooler": {
+   "us": 56.19199946522713,
+   "speedup": 0.5760250399017497,
+   "check": "OK relative L2 error 7.687e-05 (worst row 1.830e-04); 7 probe rows exact to 0.0e+00"
+  },
+  "decode 32 | m 32, layer unpooler": {
+   "us": 54.416000843048096,
+   "speedup": 0.5454278011422324,
+   "check": "OK relative L2 error 6.379e-05 (worst row 1.710e-04); 7 probe rows exact to 0.0e+00"
+  },
+  "decode 32 | m 32, layer router": {
+   "us": 13.760000001639128,
+   "speedup": 1.5953488017936082,
+   "check": "OK relative L2 error 3.239e-06 (worst row 3.739e-06); 5 probe rows exact to 2.8e-06"
+  },
+  "verify 1 | m 8, layer qkv_gate": {
+   "us": 31.08799923211336,
+   "speedup": 0.7436953357627968,
+   "check": "OK relative L2 error 9.045e-05 (worst row 1.671e-04); 3 probe rows exact to 0.0e+00"
+  },
+  "verify 1 | m 8, layer o": {
+   "us": 17.03999936580658,
+   "speedup": 0.7417840840026759,
+   "check": "OK relative L2 error 4.017e-05 (worst row 8.523e-05); 1 probe rows exact to 0.0e+00"
+  },
+  "verify 1 | m 8, layer pooler": {
+   "us": 40.68800061941147,
+   "speedup": 0.7624852340694126,
+   "check": "OK relative L2 error 6.331e-05 (worst row 1.238e-04); 1 probe rows exact to 0.0e+00"
+  },
+  "verify 1 | m 8, layer unpooler": {
+   "us": 16.047999262809753,
+   "speedup": 0.7726819828072088,
+   "check": "OK relative L2 error 2.657e-05 (worst row 6.171e-05); 1 probe rows exact to 0.0e+00"
+  },
+  "verify 1 | m 8, layer router": {
+   "us": 13.69599997997284,
+   "speedup": 2.35747663805606,
+   "check": "OK relative L2 error 3.424e-06 (worst row 3.520e-06); 2 probe rows exact to 2.3e-06"
+  },
+  "verify 16 | m 128, layer qkv_gate": {
+   "us": 26.28799993544817,
+   "speedup": 0.9829579801268488,
+   "check": "OK relative L2 error 1.547e-04 (worst row 3.668e-04); 21 probe rows exact to 0.0e+00"
+  },
+  "verify 16 | m 128, layer o": {
+   "us": 13.21600005030632,
+   "speedup": 1.0108958962330765,
+   "check": "OK relative L2 error 5.461e-05 (worst row 1.892e-04); 18 probe rows exact to 0.0e+00"
+  },
+  "verify 16 | m 128, layer pooler": {
+   "us": 32.83200040459633,
+   "speedup": 0.9780701221895657,
+   "check": "OK relative L2 error 2.064e-04 (worst row 4.322e-04); 16 probe rows exact to 0.0e+00"
+  },
+  "verify 16 | m 128, layer unpooler": {
+   "us": 30.368000268936157,
+   "speedup": 1.0021074669203842,
+   "check": "OK relative L2 error 1.374e-04 (worst row 2.785e-04); 13 probe rows exact to 0.0e+00"
+  },
+  "verify 16 | m 128, layer router": {
+   "us": 21.37599978595972,
+   "speedup": 1.0770958298088145,
+   "check": "OK relative L2 error 3.265e-06 (worst row 3.871e-06); 15 probe rows exact to 2.9e-06"
+  }
+ },
+ "force_torch": {
+  "decode 16 | m 16, layer qkv_gate": {
+   "us": 22.23999984562397,
+   "speedup": 0.9913669244302915,
+   "check": "OK relative L2 error 8.619e-05 (worst row 1.638e-04); 2 probe rows exact to 0.0e+00"
+  },
+  "decode 16 | m 16, layer o": {
+   "us": 13.07199988514185,
+   "speedup": 0.9951040374672101,
+   "check": "OK relative L2 error 3.589e-05 (worst row 1.774e-04); 3 probe rows exact to 0.0e+00"
+  },
+  "decode 16 | m 16, layer pooler": {
+   "us": 31.360000371932983,
+   "speedup": 0.9969387522368373,
+   "check": "OK relative L2 error 8.334e-05 (worst row 2.169e-04); 4 probe rows exact to 0.0e+00"
+  },
+  "decode 16 | m 16, layer unpooler": {
+   "us": 29.40800040960312,
+   "speedup": 0.9896626615911783,
+   "check": "OK relative L2 error 1.407e-04 (worst row 2.637e-04); 2 probe rows exact to 0.0e+00"
+  },
+  "decode 16 | m 16, layer router": {
+   "us": 13.75999953597784,
+   "speedup": 1.6081395835999774,
+   "check": "OK relative L2 error 3.210e-06 (worst row 3.584e-06); 3 probe rows exact to 2.7e-06"
+  },
+  "decode 32 | m 32, layer qkv_gate": {
+   "us": 22.431999444961548,
+   "speedup": 0.9907275442976087,
+   "check": "OK relative L2 error 1.546e-04 (worst row 4.597e-04); 6 probe rows exact to 0.0e+00"
+  },
+  "decode 32 | m 32, layer o": {
+   "us": 12.97600008547306,
+   "speedup": 1.006165203245217,
+   "check": "OK relative L2 error 6.258e-05 (worst row 1.235e-04); 3 probe rows exact to 0.0e+00"
+  },
+  "decode 32 | m 32, layer pooler": {
+   "us": 31.935999169945717,
+   "speedup": 1.013527040812845,
+   "check": "OK relative L2 error 9.031e-05 (worst row 2.083e-04); 7 probe rows exact to 0.0e+00"
+  },
+  "decode 32 | m 32, layer unpooler": {
+   "us": 29.37600016593933,
+   "speedup": 1.010348567508205,
+   "check": "OK relative L2 error 1.255e-04 (worst row 2.203e-04); 7 probe rows exact to 0.0e+00"
+  },
+  "decode 32 | m 32, layer router": {
+   "us": 13.856000266969204,
+   "speedup": 1.584295546502375,
+   "check": "OK relative L2 error 3.239e-06 (worst row 3.730e-06); 5 probe rows exact to 2.8e-06"
+  },
+  "verify 1 | m 8, layer qkv_gate": {
+   "us": 23.00800010561943,
+   "speedup": 1.004867868610333,
+   "check": "OK relative L2 error 5.261e-05 (worst row 8.451e-05); 3 probe rows exact to 0.0e+00"
+  },
+  "verify 1 | m 8, layer o": {
+   "us": 12.80000014230609,
+   "speedup": 0.9875000140971677,
+   "check": "OK relative L2 error 8.004e-05 (worst row 1.906e-04); 1 probe rows exact to 0.0e+00"
+  },
+  "verify 1 | m 8, layer pooler": {
+   "us": 30.81599995493889,
+   "speedup": 1.0067497313562312,
+   "check": "OK relative L2 error 8.819e-05 (worst row 1.285e-04); 1 probe rows exact to 0.0e+00"
+  },
+  "verify 1 | m 8, layer unpooler": {
+   "us": 12.880000285804272,
+   "speedup": 0.9627328893884545,
+   "check": "OK relative L2 error 2.943e-06 (worst row 7.856e-06); 1 probe rows exact to 0.0e+00"
+  },
+  "verify 1 | m 8, layer router": {
+   "us": 13.439999893307686,
+   "speedup": 2.4023809705295998,
+   "check": "OK relative L2 error 3.428e-06 (worst row 3.524e-06); 2 probe rows exact to 2.3e-06"
+  },
+  "verify 16 | m 128, layer qkv_gate": {
+   "us": 25.344000197947025,
+   "speedup": 1.019570672202568,
+   "check": "OK relative L2 error 1.547e-04 (worst row 3.668e-04); 21 probe rows exact to 0.0e+00"
+  },
+  "verify 16 | m 128, layer o": {
+   "us": 13.488000258803368,
+   "speedup": 0.9905100800061867,
+   "check": "OK relative L2 error 5.461e-05 (worst row 1.892e-04); 18 probe rows exact to 0.0e+00"
+  },
+  "verify 16 | m 128, layer pooler": {
+   "us": 32.127998769283295,
+   "speedup": 0.999501988220717,
+   "check": "OK relative L2 error 2.064e-04 (worst row 4.322e-04); 16 probe rows exact to 0.0e+00"
+  },
+  "verify 16 | m 128, layer unpooler": {
+   "us": 30.6560005992651,
+   "speedup": 0.9926930855315383,
+   "check": "OK relative L2 error 1.374e-04 (worst row 2.785e-04); 13 probe rows exact to 0.0e+00"
+  },
+  "verify 16 | m 128, layer router": {
+   "us": 19.935999996960163,
+   "speedup": 1.1548956777167947,
+   "check": "OK relative L2 error 3.265e-06 (worst row 3.869e-06); 15 probe rows exact to 2.9e-06"
+  }
+ }
+}
