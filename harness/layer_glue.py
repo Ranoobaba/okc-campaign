@@ -1,0 +1,111 @@
+import types
+
+from sglang.kernels.ops.muse_spark_v12.fused_muse_spark_routing import FusedMuseSparkRouting
+from sglang.kernels.ops.muse_spark_v12.fused_norm_residual import FusedPostNormResidualPreNorm
+from sglang.srt.layers.muse_spark_layers import (
+    MuseSpark1xNormPreservingResidualConnection,
+    MuseSpark1xRMSNorm,
+    MuseSpark1xRMSNormWithInputScale,
+)
+
+HIDDEN = 8192
+D_EXPERT = 4096
+LOCAL_EXPERTS = 32
+N_EXPERTS = 256
+TOP_K = 8
+UNPOOL_SLICE = HIDDEN // 8
+SLICED_MAX_TOKENS = 8
+ROUTER_MULTIPLIER = 0.1767766952966369
+LAYER_RMS_EPS = 1e-5
+LAYER_POST_NORM_EPS = 1e-8
+# Shapes beyond this use SGLang's own attention and experts (prefill blocks).
+DECODE_MAX_Q_LEN = 8
+
+
+def _param(w):
+    return torch.nn.Parameter(w.contiguous(), requires_grad=False)
+
+
+def _norm(cls, w, size, eps, **kw):
+    norm = cls(size, eps=eps, has_weight=w is not None, zero_centered_gamma=True, **kw)
+    if w is not None:
+        norm.weight = _param(w)
+        norm.precompute_effective_weight()
+    return norm
+
+
+def _residual(w):
+    gate = MuseSpark1xNormPreservingResidualConnection(HIDDEN, temperature=0.3)
+    gate.gate = _param(w)
+    gate.precompute_coefficients()
+    return gate
+
+
+def prepare(weights):
+    dev = weights["qkv_gate"].device
+    proj_state = proj_prepare({k: weights[k] for k in ("qkv_gate", "o", "pooler", "unpooler", "router")})
+    moe_state = moe_prepare({"w13": weights["w13"], "w13_sf": weights["w13_sf"], "w13_gs": weights["w13_gs"],
+                             "w2": weights["w2"], "w2_sf": weights["w2_sf"], "w2_gs": weights["w2_gs"],
+                             "post_norm_w": weights["post_expert_norm"]})
+    pre_ffn = _norm(MuseSpark1xRMSNorm, weights["pre_ffn_norm"], HIDDEN, LAYER_RMS_EPS)
+    next_pre_attn = _norm(MuseSpark1xRMSNorm, weights["next_pre_attn_norm"], HIDDEN, LAYER_RMS_EPS)
+    post_attn = _norm(MuseSpark1xRMSNorm, None, HIDDEN, LAYER_POST_NORM_EPS, is_post_norm=True,
+                      post_norm_gain_center_type="one", residual_id=1)
+    post_ffn = _norm(MuseSpark1xRMSNormWithInputScale, weights["post_ffn_norm"], HIDDEN, LAYER_POST_NORM_EPS,
+                     is_post_norm=True, post_norm_gain_center_type="one", residual_id=2)
+    state = {
+        "proj": proj_state,
+        "moe": moe_state,
+        "routing": FusedMuseSparkRouting(expert_bias=weights["router_bias"].float().contiguous(), route_scale=1.0,
+                                         router_output_multiplier=ROUTER_MULTIPLIER, router_score_division_eps=1e-15),
+        "attn_boundary": FusedPostNormResidualPreNorm(post_attn, _residual(weights["attn_residual_gate"]), pre_ffn),
+        "ffn_boundary": FusedPostNormResidualPreNorm(post_ffn, _residual(weights["ffn_residual_gate"]), next_pre_attn),
+        "pre_expert_norm": _norm(MuseSpark1xRMSNorm, weights["pre_expert_norm"], D_EXPERT, LAYER_RMS_EPS),
+        "_modules": (pre_ffn, next_pre_attn, post_attn, post_ffn),
+    }
+    torch.cuda.synchronize()
+    return state
+
+
+def _proj(state, x, layer, n):
+    data = {"x": x, "config": {"m": x.shape[0], "n": n, "k": x.shape[1], "layer": layer}}
+    return proj_kernel_fn(data, state["proj"])
+
+
+def kernel_fn(data, state):
+    cfg = data["config"]
+    B, L, T = cfg["batch"], cfg["q_len"], cfg["tokens"]
+    hq, d = cfg["num_q_heads"], cfg["head_dim"]
+    x = data["attn_input"]
+    # Attention block.
+    qkv = _proj(state, x, "qkv_gate", 2 * hq * d + 2 * cfg["num_kv_heads"] * d)
+    attn_data = {
+        "qkv": qkv.view(B, L, -1), "positions": data["positions"], "cache_loc": data["cache_loc"],
+        "cache_seqlens": data["cache_seqlens"], "cu_seqlens_q": data["cu_seqlens_q"],
+        "scheduler_metadata": data["scheduler_metadata"], "k_cache": data["k_cache"], "v_cache": data["v_cache"],
+        "k_scale": data["k_scale"], "v_scale": data["v_scale"], "page_table": data["page_table"],
+        "seq_lens": data["seq_lens"],
+        "config": {"batch": B, "q_len": L, "num_q_heads": hq, "num_kv_heads": cfg["num_kv_heads"], "head_dim": d,
+                   "page_size": cfg["page_size"], "window": cfg["window"], "rope_theta": cfg["rope_theta"],
+                   "qk_scale_factor": cfg["qk_scale_factor"], "sm_scale": cfg["sm_scale"], "kv_scale": cfg["kv_scale"]},
+    }
+    o = attn_kernel_fn(attn_data).view(T, hq * d)
+    attn_output = _proj(state, o, "o", HIDDEN)
+    # Post-attention boundary and router.
+    split_router = T > SLICED_MAX_TOKENS
+    ffn_input, stream, _ = state["attn_boundary"](data["stream"], attn_output, branch_dtype=torch.bfloat16,
+                                                  router_dtype=None)
+    logits = _proj(state, ffn_input, "router", N_EXPERTS)
+    topk_weights, topk_ids = state["routing"](None, logits, TOP_K, True)
+    # MoE block.
+    expert_input = state["pre_expert_norm"](_proj(state, ffn_input, "pooler", D_EXPERT))
+    local_ids = (topk_ids - data["local_start"]) % N_EXPERTS
+    local_ids = torch.where(local_ids < LOCAL_EXPERTS, local_ids, -1).to(torch.int32)
+    expert_output = _moe_core(expert_input.contiguous(), local_ids, topk_weights.float().contiguous(), state["moe"],
+                              TOP_K, LOCAL_EXPERTS, D_EXPERT)
+    if T <= SLICED_MAX_TOKENS:
+        ffn_output = F.pad(_proj(state, expert_output, "unpooler", UNPOOL_SLICE), (0, HIDDEN - UNPOOL_SLICE))
+    else:
+        ffn_output = _proj(state, expert_output, "unpooler", HIDDEN)
+    next_attn_input, stream, _ = state["ffn_boundary"](stream, ffn_output, branch_dtype=torch.bfloat16)
+    return next_attn_input, stream, topk_ids

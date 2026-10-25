@@ -208,29 +208,16 @@ def _block_m(pairs_per_expert):
     return 64
 
 
-def kernel_fn(data: Inputs, st) -> torch.Tensor:
-    cfg = data["config"]
-    x = data["hidden_states"]
+def _moe_core(x, local_ids, g, st, top_k, count, I, e_off=0):
+    """x [M, H] bf16; local_ids [M, top_k] int32 (-1 = not on this GPU); g [M, top_k] fp32."""
     M, H = x.shape
-    I = cfg["d_expert"]
-    top_k = cfg["top_k"]
-    count = cfg["local_count"]
     dev = x.device
-    emap = _expert_map(st, cfg["local_start"], count, cfg["n_experts"], dev)
-    # Local expert id per (token, slot): -1 where the expert lives on another GPU.
-    local_ids = emap[data["topk_ids"]]
-    g = data["topk_weights"]
-    if g.dtype != torch.float32:
-        g = g.float()
-    g = g.contiguous()
     pairs = M * top_k
     block_m = _block_m(pairs / count)
     sorted_ids, expert_ids, n_post = moe_align_block_size(local_ids, block_m, count)
     max_blocks = expert_ids.numel()
     inter = torch.empty((pairs, I), dtype=torch.bfloat16, device=dev)
     w13, w13_sf, w2, w2_sf = st["w13"], st["w13_sf"], st["w2"], st["w2_sf"]
-    # Global expert row offsets: the weights are indexed by global id = local_start + local id.
-    e_off = cfg["local_start"]
     BN1, BK1 = 64, 128
     _gemm1[(max_blocks, I // BN1)](
         x, w13[e_off:], w13_sf[e_off:], st["w13_gs"][e_off:], inter, sorted_ids, expert_ids, n_post,
@@ -246,3 +233,17 @@ def kernel_fn(data: Inputs, st) -> torch.Tensor:
     _finalize[(M,)](y, local_ids, g, st["post_norm_w"], out, POST_NORM_EPS, H=H, TOP_K=top_k,
                     BLOCK_H=triton.next_power_of_2(H), num_warps=8)
     return out
+
+
+def kernel_fn(data: Inputs, st) -> torch.Tensor:
+    cfg = data["config"]
+    x = data["hidden_states"]
+    if not x.is_contiguous():
+        x = x.contiguous()
+    emap = _expert_map(st, cfg["local_start"], cfg["local_count"], cfg["n_experts"], x.device)
+    local_ids = emap[data["topk_ids"]]
+    g = data["topk_weights"]
+    if g.dtype != torch.float32:
+        g = g.float()
+    return _moe_core(x, local_ids, g.contiguous(), st, cfg["top_k"], cfg["local_count"], cfg["d_expert"],
+                     e_off=cfg["local_start"])
