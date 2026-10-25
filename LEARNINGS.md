@@ -54,3 +54,13 @@ Durable facts across sessions. Read before designing anything.
   pure launch latency of 5 kernels), full b1 37 us (floor 4.3), full b16 213 us (floor 63), full b32 399 us
   (floor 126, 3.2x off). Sliding shapes carry weight 46 vs 16, so a fused single-launch decode kernel is
   the whole game on decode-1 and the split-KV efficiency matters on b16/b32 full.
+
+## Real judge vs replica (2026-10-25 04:05)
+
+- proj v2: real judge x1.1075 [1.091, 1.124] vs replica x1.1019. The replica is faithful; trust it for keep/discard.
+- The real judge returns a per-shape kernel profile (records event=profile) and 60 paired ratios per shape. Save every
+  job JSON under results/<problem>/judge_<id>.json; it is free intel.
+- Judge-timed shape time is roughly kernel GPU time + ~5 us of fixed per-launch cost inside the graph (our m=1
+  qkv_gate gemv is 10.7 us of GPU time but times at ~16.7 us). So on tiny shapes, launch count is the lever:
+  one kernel per shape, and no zero-fill or cast launches.
+- prepare() took 134 s on the judge (our tuning loop); keep it under ~200 s.

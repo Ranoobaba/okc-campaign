@@ -43,3 +43,10 @@ Targets: all four decode boards entered; overall top 50 (serving priority); then
   scales folded into scalars, running. Next: fuse prep into attn (2 launches) for the latency-bound sliding shapes.
 - Product subagent done: name Pitcrew, files in ~/inference-product (RESEARCH.md, DEVPOST.md, site/). Devpost
   auto-fill blocked (Chrome remote debugging off); Rayyan pastes or enables chrome://inspect remote debugging.
+
+## 2026-10-25 05:35 PT: first board entry
+
+- proj v2 on the REAL judge: x1.1075 [1.091, 1.124], rank #824/932 on muse_bf16_proj; overall #1019 (solved 1/4).
+  Replica predicted 1.1019: calibration holds.
+- moe v2 (vectorized loads): correct, x0.40 (175 us at bs 1 vs 85). Profiling the bs=1 shape to see gemm1/gemm2/finalize split.
+- decode_layer v1 assembled (proj + attention + moe components + SGLang fused norms); first replica run in flight.
