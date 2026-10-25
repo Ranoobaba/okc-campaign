@@ -153,9 +153,13 @@ __global__ void __launch_bounds__(128) skinny_kernel(const __nv_bfloat16* __rest
     const int n0 = blockIdx.x * 16;
     const int tid = threadIdx.x, warp = tid >> 5, lane = tid & 31;
     // each warp owns a private pipeline over its K slice: chunks warp, warp+4, ...
-    __shared__ __align__(16) __nv_bfloat16 xs[4][STAGES][MT * 16][XS];
-    __shared__ __align__(16) __nv_bfloat16 wsm[4][STAGES][16][XS];
-    __shared__ float red[4][MT * 16][16];
+    extern __shared__ __align__(16) unsigned char smem_raw[];
+    typedef __nv_bfloat16 XsT[STAGES][MT * 16][XS];
+    typedef __nv_bfloat16 WsT[STAGES][16][XS];
+    typedef float RedT[MT * 16][16];
+    XsT* xs = reinterpret_cast<XsT*>(smem_raw);                                   // [4]
+    WsT* wsm = reinterpret_cast<WsT*>(smem_raw + 4 * sizeof(XsT));                 // [4]
+    RedT* red = reinterpret_cast<RedT*>(smem_raw + 4 * sizeof(XsT) + 4 * sizeof(WsT));  // [4]
     const int nK = K / BK;              // chunks in total
     const int my_chunks = (nK - warp + 3) / 4;
     auto load_stage = [&](int stage, int ci) {
@@ -230,15 +234,24 @@ __global__ void __launch_bounds__(128) skinny_kernel(const __nv_bfloat16* __rest
     }
 }
 
+template <int MT> size_t smem_bytes() {
+    return 4 * (size_t)STAGES * MT * 16 * XS * 2 + 4 * (size_t)STAGES * 16 * XS * 2 + 4 * (size_t)MT * 16 * 16 * 4;
+}
 void skinny(torch::Tensor X, torch::Tensor W, torch::Tensor O) {
     int M = X.size(0), K = X.size(1), N = W.size(0);
     dim3 grid((N + 15) / 16);
     cudaStream_t stream = at::cuda::getCurrentCUDAStream();
+    static bool attr_set = false;
+    if (!attr_set) {
+        cudaFuncSetAttribute(skinny_kernel<1>, cudaFuncAttributeMaxDynamicSharedMemorySize, (int)smem_bytes<1>());
+        cudaFuncSetAttribute(skinny_kernel<2>, cudaFuncAttributeMaxDynamicSharedMemorySize, (int)smem_bytes<2>());
+        attr_set = true;
+    }
     if (M <= 16)
-        skinny_kernel<1><<<grid, 128, 0, stream>>>((const __nv_bfloat16*)X.data_ptr(), X.stride(0), (const __nv_bfloat16*)W.data_ptr(), W.stride(0),
+        skinny_kernel<1><<<grid, 128, smem_bytes<1>(), stream>>>((const __nv_bfloat16*)X.data_ptr(), X.stride(0), (const __nv_bfloat16*)W.data_ptr(), W.stride(0),
                                                    (__nv_bfloat16*)O.data_ptr(), O.stride(0), M, N, K);
     else
-        skinny_kernel<2><<<grid, 128, 0, stream>>>((const __nv_bfloat16*)X.data_ptr(), X.stride(0), (const __nv_bfloat16*)W.data_ptr(), W.stride(0),
+        skinny_kernel<2><<<grid, 128, smem_bytes<2>(), stream>>>((const __nv_bfloat16*)X.data_ptr(), X.stride(0), (const __nv_bfloat16*)W.data_ptr(), W.stride(0),
                                                    (__nv_bfloat16*)O.data_ptr(), O.stride(0), M, N, K);
 }
 """
