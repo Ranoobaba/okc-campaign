@@ -105,3 +105,7 @@ Durable facts across sessions. Read before designing anything.
 - ncu on the proj CUDA skinny kernel (m 16 qkv_gate): 26.5 us, DRAM 31.6% (1.5 TB/s), 144 blocks = 0.36 waves,
   achieved occupancy 7%, 1.1 active warps per scheduler. Same disease as the MoE kernel: too few warps and bytes
   in flight. For a 16-row-per-block streaming GEMM the fix is many K-split warps per block (16 warps, ~200 KB smem).
+- ncu on v4f (split-K 4, contiguous tiles): GEMM1 64 us, SM throughput 69%, DRAM 19%, 4.3 active warps/scheduler,
+  issue 0.74/cycle: now instruction-throughput bound (~150 warp-instructions per 64-k chunk per warp). Marlin at
+  bs 1 is latency/occupancy bound instead (46 us for ~56 MB). To beat it: halve the instruction count (8-nibble
+  prmt dequant ~17 ops per 8 values, SIMD scale conversion, hoisted cp.async pointers) and split K 8 ways.
