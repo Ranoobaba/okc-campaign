@@ -423,7 +423,10 @@ def _window_tok_path(data):
 def _plan(batch, hkv, max_len, window, L, block_n):
     """(chunk, nsplit): key chunk per program so that about 300 programs are in flight."""
     span = min(max_len, window + L) if window else max_len
-    target = max(1, -(-300 // (batch * hkv)))
+    # Full-context layers at batch >= 8: 4x more programs hide the per-tile gather latency (measured +10 to 17%);
+    # at small batch the merge over hundreds of splits costs more than it saves.
+    programs = 1200 if (not window and batch >= 8) else 300
+    target = min(64, max(1, -(-programs // (batch * hkv))))
     chunk = -(-span // target)
     chunk = max(block_n, -(-chunk // block_n) * block_n)
     nsplit = -(-span // chunk)

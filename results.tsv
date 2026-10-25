@@ -51,3 +51,4 @@ date	problem	tag	ok	speedup	note
 2026-10-25T07:45	muse_moe_w4a16	sweep micro_moe3	ok	micro	block 8 everywhere: bs32 +3% (noise) but bs128/256 lose 30%; atomic everywhere neutral; v3c rule (8 at bs<=8, else 16) stands
 2026-10-25T07:50	muse_decode_layer	v6 REAL JUDGE	ok	1.2196	CI [1.201,1.238]; replica 1.241; overall #569/1098
 2026-10-25T08:05	muse_prefill_layer	micro_prefill1	ok	micro	assembled layer on prefill shapes: 0.94-0.99x with Marlin block 64 above 512 tokens; block 16 there is 0.63-0.84x; no prefill entry (below 1.0)
+2026-10-25T08:25	muse_attention_decode	v12_splits_bigbatch	ok	1.2705	KEEP: 4x splits on full layers at batch>=8: decode-16 full 1.19x, decode-32 full 1.22x; submitting
