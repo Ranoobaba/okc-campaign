@@ -19,3 +19,4 @@ date	problem	tag	ok	speedup	note
 2026-10-25T04:45	muse_decode_layer	v2_marlinmoe	ok	1.0935	13/13 pass; attention v2 drags verify-full (0.87-0.90); v3 with attention v6 running
 2026-10-25T04:50	muse_attention_decode	v6 REAL JUDGE	ok	1.1813	job 3a85f99f7d384f0f CI [1.164,1.199]; replica 1.221; board #588/692
 2026-10-25T05:00	muse_decode_layer	v3_all_components	ok	1.1310	KEEP: proj v2 + attention v6 + moe v3 + SGLang fused norms; 13/13 tests; submitting
+2026-10-25T05:10	muse_bf16_proj	v3_tma	ok	1.1023	DISCARD: TMA-streamed Triton configs do not beat cuBLAS at m 8..256 (race picked cuBLAS); same as v2

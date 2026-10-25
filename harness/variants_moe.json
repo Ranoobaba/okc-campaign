@@ -1,0 +1,8 @@
+{
+ "v3_asis": [],
+ "atomic_add": [["use_atomic_add=False,\n                  use_fp32_reduce=True,", "use_atomic_add=True,\n                  use_fp32_reduce=False,"]],
+ "no_fp32_reduce": [["use_fp32_reduce=True,", "use_fp32_reduce=False,"]],
+ "block16min": [["BLOCK_SIZE_M_CANDIDATES = (8, 16, 32, 48, 64)", "BLOCK_SIZE_M_CANDIDATES = (16, 32, 48, 64)"]],
+ "block64": [["BLOCK_SIZE_M_CANDIDATES = (8, 16, 32, 48, 64)", "BLOCK_SIZE_M_CANDIDATES = (64,)"]],
+ "workspace8": [["marlin_make_workspace(device, max_blocks_per_sm=4)", "marlin_make_workspace(device, max_blocks_per_sm=8)"]]
+}
