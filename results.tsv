@@ -39,3 +39,4 @@ date	problem	tag	ok	speedup	note
 2026-10-25T08:55	muse_moe_w4a16	v4h_lb8	ok	0.7561	DISCARD: register cap no gain (82.6us bs1); CUDA MoE parked at v4g
 2026-10-25T09:00	muse_attention_decode	v9_prefetch	ok	1.0910	DISCARD: one-tile prefetch + 4x splits made full shapes worse (b16 280 vs 206us, b32 494 vs 352); register pressure + combine cost; attention parked at v6
 2026-10-25T09:20	muse_decode_layer	v4_fewer_launches	ok	1.1675	KEEP: fused local-ids kernel + unpooler into zeroed buffer (2 fewer launches): decode-1 1.38x; submitting
+2026-10-25T09:40	muse_attention_decode	v10_tok_sliding	ok	1.1742	per-token split on sliding verify: b1 1.87x (from 1.43) but b16/b32 regress (0.89/0.63, window re-read per token); v11 limits it to B*L<=32
