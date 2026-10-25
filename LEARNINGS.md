@@ -50,3 +50,7 @@ Durable facts across sessions. Read before designing anything.
   (sm100 only, likely useless on H200), grouped_mm_fp4; sgl_kernel with cutlass_w4a8_moe_mm, ggml_moe_a8_vec
   (GEMV-style MoE for small M). Check which of these run on sm_90 before writing custom kernels.
 - attention harness bug fixed (check must read the cache the kernel wrote). Recalibration in flight.
+- attention replica calibration: baseline vs itself x0.9965 (ok). Baseline FA3 path: sliding b1 23.7 us (floor 0.1:
+  pure launch latency of 5 kernels), full b1 37 us (floor 4.3), full b16 213 us (floor 63), full b32 399 us
+  (floor 126, 3.2x off). Sliding shapes carry weight 46 vs 16, so a fused single-launch decode kernel is
+  the whole game on decode-1 and the split-KV efficiency matters on b16/b32 full.
