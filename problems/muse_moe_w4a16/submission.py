@@ -58,15 +58,18 @@ TWO_POW_126 = tl.constexpr(float(2.0 ** 126))
 
 
 @triton.jit
-def _dequant_tile(b_ptrs, shift, sf_ptrs, sfx):
-    """[BN, BK] BF16 weights from packed nibbles (byte pointers, per-element shift) and scales."""
-    b = tl.load(b_ptrs)
-    code = (b >> shift) & 0xF
-    code = code.to(tl.int32)
-    bits = ((code & 8) << 28) | ((code & 7) << 22)
-    mag = bits.to(tl.float32, bitcast=True)
-    sf = tl.load(sf_ptrs).to(tl.float32) * sfx
-    return (mag * sf).to(tl.bfloat16)
+def _dequant_pair(pk, sf, sfx, BN: tl.constexpr, BKH: tl.constexpr):
+    """Packed bytes [BN, BKH] (two E2M1 codes each) and scales [BN, BKH // 8] -> the even and odd
+    element tiles as BF16 [BN, BKH]. An E2M1 nibble placed at FP32 bits [22:24] with its sign at
+    bit 31 reads as the E2M1 value times 2^-126; 2^126 is folded into the scale."""
+    s3 = tl.reshape(sf.to(tl.float32) * sfx, (BN, BKH // 8, 1))
+    s3 = tl.broadcast_to(s3, (BN, BKH // 8, 8))
+    scale = tl.reshape(s3, (BN, BKH))
+    lo = (pk & 0xF).to(tl.int32)
+    hi = (pk >> 4).to(tl.int32)
+    lo = (((lo & 8) << 28) | ((lo & 7) << 22)).to(tl.float32, bitcast=True)
+    hi = (((hi & 8) << 28) | ((hi & 7) << 22)).to(tl.float32, bitcast=True)
+    return (lo * scale).to(tl.bfloat16), (hi * scale).to(tl.bfloat16)
 
 
 @triton.jit
@@ -82,34 +85,40 @@ def _gemm1(a_ptr, w_ptr, sf_ptr, gs_ptr, c_ptr, sorted_ids_ptr, expert_ids_ptr, 
     e = tl.load(expert_ids_ptr + pid_m)
     if e < 0:
         return
+    BKH: tl.constexpr = BLOCK_K // 2
     offs_tok = tl.load(sorted_ids_ptr + pid_m * BLOCK_M + tl.arange(0, BLOCK_M))
     tok_mask = offs_tok < num_valid
-    rows = offs_tok // TOP_K
+    rows = (offs_tok // TOP_K).to(tl.int64)
     offs_n = pid_n * BLOCK_N + tl.arange(0, BLOCK_N)
-    offs_k = tl.arange(0, BLOCK_K)
-    a_ptrs = a_ptr + rows[:, None] * stride_am + offs_k[None, :]
+    kh = tl.arange(0, BKH)
+    ks = tl.arange(0, BKH // 8)
+    a_even = a_ptr + rows[:, None] * stride_am + 2 * kh[None, :]
+    a_odd = a_even + 1
     e64 = e.to(tl.int64)
-    wg = w_ptr + e64 * stride_we + offs_n[:, None] * stride_wn + (offs_k[None, :] // 2)
+    wg = w_ptr + e64 * stride_we + offs_n[:, None] * stride_wn + kh[None, :]
     wu = wg + I * stride_wn
-    shift = (offs_k[None, :] % 2) * 4
-    sg = sf_ptr + e64 * stride_se + offs_n[:, None] * stride_sn + (offs_k[None, :] // 16)
+    sg = sf_ptr + e64 * stride_se + offs_n[:, None] * stride_sn + ks[None, :]
     su = sg + I * stride_sn
     sfx = tl.load(gs_ptr + e) * TWO_POW_126
     acc_g = tl.zeros((BLOCK_M, BLOCK_N), dtype=tl.float32)
     acc_u = tl.zeros((BLOCK_M, BLOCK_N), dtype=tl.float32)
     for _ in range(0, K, BLOCK_K):
-        a = tl.load(a_ptrs, mask=tok_mask[:, None], other=0.0)
-        g = _dequant_tile(wg, shift, sg, sfx)
-        u = _dequant_tile(wu, shift, su, sfx)
-        acc_g = tl.dot(a, tl.trans(g), acc_g)
-        acc_u = tl.dot(a, tl.trans(u), acc_u)
-        a_ptrs += BLOCK_K
-        wg += BLOCK_K // 2
-        wu += BLOCK_K // 2
-        sg += BLOCK_K // 16
-        su += BLOCK_K // 16
+        ae = tl.load(a_even, mask=tok_mask[:, None], other=0.0)
+        ao = tl.load(a_odd, mask=tok_mask[:, None], other=0.0)
+        g_lo, g_hi = _dequant_pair(tl.load(wg), tl.load(sg), sfx, BLOCK_N, BKH)
+        acc_g = tl.dot(ae, tl.trans(g_lo), acc_g)
+        acc_g = tl.dot(ao, tl.trans(g_hi), acc_g)
+        u_lo, u_hi = _dequant_pair(tl.load(wu), tl.load(su), sfx, BLOCK_N, BKH)
+        acc_u = tl.dot(ae, tl.trans(u_lo), acc_u)
+        acc_u = tl.dot(ao, tl.trans(u_hi), acc_u)
+        a_even += BLOCK_K
+        a_odd += BLOCK_K
+        wg += BKH
+        wu += BKH
+        sg += BKH // 8
+        su += BKH // 8
     h = acc_g * tl.sigmoid(acc_g) * acc_u
-    c_ptrs = c_ptr + offs_tok[:, None] * stride_cm + offs_n[None, :]
+    c_ptrs = c_ptr + offs_tok.to(tl.int64)[:, None] * stride_cm + offs_n[None, :]
     tl.store(c_ptrs, h.to(tl.bfloat16), mask=tok_mask[:, None])
 
 
@@ -126,25 +135,31 @@ def _gemm2(a_ptr, w_ptr, sf_ptr, gs_ptr, c_ptr, sorted_ids_ptr, expert_ids_ptr, 
     e = tl.load(expert_ids_ptr + pid_m)
     if e < 0:
         return
+    BKH: tl.constexpr = BLOCK_K // 2
     offs_tok = tl.load(sorted_ids_ptr + pid_m * BLOCK_M + tl.arange(0, BLOCK_M))
     tok_mask = offs_tok < num_valid
+    rows = offs_tok.to(tl.int64)
     offs_n = pid_n * BLOCK_N + tl.arange(0, BLOCK_N)
-    offs_k = tl.arange(0, BLOCK_K)
-    a_ptrs = a_ptr + offs_tok[:, None] * stride_am + offs_k[None, :]
+    kh = tl.arange(0, BKH)
+    ks = tl.arange(0, BKH // 8)
+    a_even = a_ptr + rows[:, None] * stride_am + 2 * kh[None, :]
+    a_odd = a_even + 1
     e64 = e.to(tl.int64)
-    w = w_ptr + e64 * stride_we + offs_n[:, None] * stride_wn + (offs_k[None, :] // 2)
-    shift = (offs_k[None, :] % 2) * 4
-    s = sf_ptr + e64 * stride_se + offs_n[:, None] * stride_sn + (offs_k[None, :] // 16)
+    w = w_ptr + e64 * stride_we + offs_n[:, None] * stride_wn + kh[None, :]
+    s = sf_ptr + e64 * stride_se + offs_n[:, None] * stride_sn + ks[None, :]
     sfx = tl.load(gs_ptr + e) * TWO_POW_126
     acc = tl.zeros((BLOCK_M, BLOCK_N), dtype=tl.float32)
     for _ in range(0, K, BLOCK_K):
-        a = tl.load(a_ptrs, mask=tok_mask[:, None], other=0.0)
-        b = _dequant_tile(w, shift, s, sfx)
-        acc = tl.dot(a, tl.trans(b), acc)
-        a_ptrs += BLOCK_K
-        w += BLOCK_K // 2
-        s += BLOCK_K // 16
-    c_ptrs = c_ptr + offs_tok[:, None] * stride_cm + offs_n[None, :]
+        ae = tl.load(a_even, mask=tok_mask[:, None], other=0.0)
+        ao = tl.load(a_odd, mask=tok_mask[:, None], other=0.0)
+        lo, hi = _dequant_pair(tl.load(w), tl.load(s), sfx, BLOCK_N, BKH)
+        acc = tl.dot(ae, tl.trans(lo), acc)
+        acc = tl.dot(ao, tl.trans(hi), acc)
+        a_even += BLOCK_K
+        a_odd += BLOCK_K
+        w += BKH
+        s += BKH // 8
+    c_ptrs = c_ptr + rows[:, None] * stride_cm + offs_n[None, :]
     tl.store(c_ptrs, acc.to(tl.bfloat16), mask=tok_mask[:, None])
 
 
@@ -220,7 +235,7 @@ def kernel_fn(data: Inputs, st) -> torch.Tensor:
     _gemm1[(max_blocks, I // BN1)](
         x, w13[e_off:], w13_sf[e_off:], st["w13_gs"][e_off:], inter, sorted_ids, expert_ids, n_post,
         pairs, I, H, x.stride(0), w13.stride(0), w13.stride(1), w13_sf.stride(0), w13_sf.stride(1), inter.stride(0),
-        TOP_K=top_k, BLOCK_M=block_m, BLOCK_N=BN1, BLOCK_K=BK1, num_warps=4, num_stages=3)
+        TOP_K=top_k, BLOCK_M=block_m, BLOCK_N=BN1, BLOCK_K=BK1, num_warps=8, num_stages=3)
     y = torch.empty((pairs, H), dtype=torch.bfloat16, device=dev)
     BN2, BK2 = 64, 128
     _gemm2[(max_blocks, H // BN2)](
