@@ -1,3 +1,4 @@
 {"at": "2026-10-25T04:00:59", "problem": "muse_bf16_proj", "file": "problems/muse_bf16_proj/submission.py", "mode": "run", "job_id": "f35dd5d974a44531", "flags": []}
 {"at": "2026-10-25T04:19:59", "problem": "muse_moe_w4a16", "file": "problems/muse_moe_w4a16/submission.py", "mode": "run", "job_id": "9c1b770f3b684916", "flags": []}
 {"at": "2026-10-25T04:32:55", "problem": "muse_attention_decode", "file": "problems/muse_attention_decode/submission.py", "mode": "run", "job_id": "3a85f99f7d384f0f", "flags": []}
+{"at": "2026-10-25T04:43:06", "problem": "muse_decode_layer", "file": "problems/muse_decode_layer/submission.py", "mode": "run", "job_id": "fa8d57ba9f2746ca", "flags": []}
