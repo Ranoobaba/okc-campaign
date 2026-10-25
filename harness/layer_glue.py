@@ -100,7 +100,7 @@ def kernel_fn(data, state):
                    "page_size": cfg["page_size"], "window": cfg["window"], "rope_theta": cfg["rope_theta"],
                    "qk_scale_factor": cfg["qk_scale_factor"], "sm_scale": cfg["sm_scale"], "kv_scale": cfg["kv_scale"]},
     }
-    o = attn_kernel_fn(attn_data).view(T, hq * d)
+    o = (_fa3_path(attn_data) if L > 16 else attn_kernel_fn(attn_data)).view(T, hq * d)  # prefill blocks: FA3
     attn_output = _proj(state, o, "o", HIDDEN)
     # Post-attention boundary and router.
     split_router = T > SLICED_MAX_TOKENS
