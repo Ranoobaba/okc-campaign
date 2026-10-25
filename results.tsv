@@ -5,3 +5,4 @@ date	problem	tag	ok	speedup	note
 2026-10-25T05:10	muse_attention_decode	v1_splitkv	ok	0.9597	all 16 tests pass; sliding 1.3-1.9x, full decode 1.0-1.2x, verify full 0.3-0.68 (bf16 conversions + 64-row tiles); discard, v2 = fp8 QK dot
 2026-10-25T04:05	muse_bf16_proj	v2_hybrid REAL JUDGE	ok	1.1075	job f35dd5d974a44531, CI [1.091,1.124]; rank #824/932; replica said 1.1019
 2026-10-25T05:50	muse_attention_decode	v2_fp8qk	ok	0.9981	fp8 QK dot: sliding 1.3-1.9x unchanged, verify full still 0.31-0.73; 64-row path is the problem, not conversions
+2026-10-25T06:00	muse_moe_w4a16	v2_vecload	ok	0.3987	DISCARD: gemm1 92us + gemm2 70us per call at bs1 (0.46 TB/s); ALU-bound dequant + scale reshape shuffles; Marlin 46us
