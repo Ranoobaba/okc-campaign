@@ -21,3 +21,4 @@ date	problem	tag	ok	speedup	note
 2026-10-25T05:00	muse_decode_layer	v3_all_components	ok	1.1310	KEEP: proj v2 + attention v6 + moe v3 + SGLang fused norms; 13/13 tests; submitting
 2026-10-25T05:10	muse_bf16_proj	v3_tma	ok	1.1023	DISCARD: TMA-streamed Triton configs do not beat cuBLAS at m 8..256 (race picked cuBLAS); same as v2
 2026-10-25T05:15	muse_decode_layer	v3 REAL JUDGE	ok	1.1220	job fa8d57ba9f2746ca CI [1.105,1.139]; replica 1.131; board #572/636; overall solved 4/4 rank #693
+2026-10-25T05:25	muse_moe_w4a16	sweep micro_moe1	ok	micro	atomic_add +7% at bs1 (62.8 vs 67.1us), neutral elsewhere; block16min +3% at bs16; block64 bad; workspace8 neutral; no_fp32_reduce neutral
