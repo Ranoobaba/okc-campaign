@@ -1,0 +1,6 @@
+{
+ "v3c_asis": [],
+ "block8_all": [["    block_size_m = 8 if num_tokens <= 8 else 16", "    block_size_m = 8"]],
+ "block16_all": [["    block_size_m = 8 if num_tokens <= 8 else 16", "    block_size_m = 16"]],
+ "atomic_all": [["    tiny = num_tokens <= 8  # measured: atomic adds beat the fp32 reduce pass at bs 1 to 8", "    tiny = True"]]
+}

@@ -48,3 +48,4 @@ date	problem	tag	ok	speedup	note
 2026-10-25T07:05	muse_moe_w4a16	v3c_block16	ok	1.2715	KEEP: Marlin 16-row tiles above 8 tokens: bs128 1.29x, bs256 1.32x; 5/5 tests; submitting
 2026-10-25T07:20	muse_moe_w4a16	v3c REAL JUDGE	ok	1.2627	job 82a28a6bddd74525 CI [1.244,1.282]; board #624; overall #652
 2026-10-25T07:35	muse_decode_layer	v6_moe3c	ok	1.2411	KEEP: layer with moe v3c (verify 16/32 shapes 1.15-1.28x now); 13/13 tests; submitting
+2026-10-25T07:45	muse_moe_w4a16	sweep micro_moe3	ok	micro	block 8 everywhere: bs32 +3% (noise) but bs128/256 lose 30%; atomic everywhere neutral; v3c rule (8 at bs<=8, else 16) stands
