@@ -59,3 +59,10 @@ Targets: all four decode boards entered; overall top 50 (serving priority); then
 - Triton NVFP4 dequant GEMM parked: v2 0.40x, v2b 0.35x. ALU-bound dequant; the path to beat Marlin at small M is a
   CUDA kernel with lop3/prmt dequant and mma.sync, or a smarter lossless repack.
 - Attention diagnostics running: 8-variant microbench on verify/decode shapes; v4 fuses prep into the attention launch.
+
+## 2026-10-25 04:50 PT: three boards entered (note: earlier timestamps in this file were written in UTC-ish error; local time is PDT)
+
+- attention v6 REAL JUDGE x1.1813 [1.164, 1.199], #588/692. Replica 1.221 (slightly optimistic on this problem).
+- Board: proj #826 (1.107), attention #588 (1.181), moe #700 (1.134). Overall #705/1081, solved 3/4.
+- decode_layer v2 (attention v2 + moe v3) replica x1.0935, 13/13 tests; v3 with attention v6 running; submit on pass.
+- Attention latency findings in LEARNINGS.md: launch fusion did not help; the per-kernel dependency chain does.
