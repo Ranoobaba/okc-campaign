@@ -1,0 +1,5 @@
+{
+ "v13_asis": [],
+ "sliding_p1200": [["    programs = 2400 if (not window and batch >= 8) else 300\n", "    programs = 2400 if (not window and batch >= 8) else (1200 if batch >= 8 else 300)\n"]],
+ "sliding_p600": [["    programs = 2400 if (not window and batch >= 8) else 300\n", "    programs = 2400 if (not window and batch >= 8) else (600 if batch >= 8 else 300)\n"]]
+}
