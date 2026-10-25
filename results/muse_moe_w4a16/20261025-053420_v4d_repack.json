@@ -1,0 +1,183 @@
+{
+ "problem": "muse_moe_w4a16",
+ "gpu": "NVIDIA H200",
+ "torch": "2.14.1+cu130",
+ "tests": [
+  {
+   "case": "bs 4, sharding ep8",
+   "ok": true,
+   "msg": "relative L2 error 3.750e-03 (worst row 3.784e-03)",
+   "s": 2.1
+  },
+  {
+   "case": "bs 33, sharding ep8",
+   "ok": true,
+   "msg": "relative L2 error 5.522e-03 (worst row 5.773e-03)",
+   "s": 267.5
+  },
+  {
+   "case": "bs 257, sharding ep8",
+   "ok": true,
+   "msg": "relative L2 error 5.503e-03 (worst row 5.923e-03)",
+   "s": 0.1
+  },
+  {
+   "case": "bs 128, sharding ep8, dist skewed",
+   "ok": true,
+   "msg": "relative L2 error 5.302e-03 (worst row 5.636e-03)",
+   "s": 0.0
+  },
+  {
+   "case": "bs 1, sharding ep8",
+   "ok": true,
+   "msg": "relative L2 error 3.737e-03 (worst row 3.737e-03)",
+   "s": 0.0
+  }
+ ],
+ "shapes": [
+  {
+   "load": "decode 1",
+   "case": "bs 1, sharding ep8",
+   "weight": 60.0,
+   "base_us": 85.34,
+   "sub_us": 174.55,
+   "speedup": 0.4889,
+   "ci": [
+    0.4736,
+    0.525
+   ],
+   "floor_us": 5.9,
+   "sub_min_us": 153.02,
+   "base_min_us": 84.19,
+   "fails": [],
+   "s": 0.2
+  },
+  {
+   "load": "decode 16",
+   "case": "bs 16, sharding ep8",
+   "weight": 60.0,
+   "base_us": 195.52,
+   "sub_us": 385.91,
+   "speedup": 0.5066,
+   "ci": [
+    0.5029,
+    0.515
+   ],
+   "floor_us": 5.95,
+   "sub_min_us": 335.36,
+   "base_min_us": 174.94,
+   "fails": [],
+   "s": 0.0
+  },
+  {
+   "load": "decode 32",
+   "case": "bs 32, sharding ep8",
+   "weight": 60.0,
+   "base_us": 198.1,
+   "sub_us": 478.67,
+   "speedup": 0.4138,
+   "ci": [
+    0.4106,
+    0.4188
+   ],
+   "floor_us": 6.01,
+   "sub_min_us": 391.68,
+   "base_min_us": 156.29,
+   "fails": [],
+   "s": 0.4
+  },
+  {
+   "load": "verify 1",
+   "case": "bs 8, sharding ep8",
+   "weight": 60.0,
+   "base_us": 154.58,
+   "sub_us": 307.29,
+   "speedup": 0.503,
+   "ci": [
+    0.4896,
+    0.524
+   ],
+   "floor_us": 5.93,
+   "sub_min_us": 275.01,
+   "base_min_us": 140.96,
+   "fails": [],
+   "s": 0.5
+  },
+  {
+   "load": "verify 16",
+   "case": "bs 128, sharding ep8",
+   "weight": 60.0,
+   "base_us": 464.62,
+   "sub_us": 464.41,
+   "speedup": 1.0005,
+   "ci": [
+    0.9983,
+    1.0053
+   ],
+   "floor_us": 13.03,
+   "sub_min_us": 410.37,
+   "base_min_us": 411.65,
+   "fails": [],
+   "s": 0.1
+  },
+  {
+   "load": "verify 32",
+   "case": "bs 256, sharding ep8",
+   "weight": 60.0,
+   "base_us": 607.65,
+   "sub_us": 607.25,
+   "speedup": 1.0007,
+   "ci": [
+    0.9928,
+    1.0045
+   ],
+   "floor_us": 26.06,
+   "sub_min_us": 593.18,
+   "base_min_us": 592.22,
+   "fails": [],
+   "s": 0.1
+  }
+ ],
+ "ok": true,
+ "prepare_s": {
+  "baseline": 7.8,
+  "submission": 56.2
+ },
+ "graph_fixed_us": 3.17,
+ "loads": {
+  "decode 1": {
+   "base_us": 5120.6,
+   "sub_us": 10473.1,
+   "speedup": 0.4889
+  },
+  "decode 16": {
+   "base_us": 11731.2,
+   "sub_us": 23154.6,
+   "speedup": 0.5066
+  },
+  "decode 32": {
+   "base_us": 11885.8,
+   "sub_us": 28720.0,
+   "speedup": 0.4138
+  },
+  "verify 1": {
+   "base_us": 9274.6,
+   "sub_us": 18437.2,
+   "speedup": 0.503
+  },
+  "verify 16": {
+   "base_us": 27877.4,
+   "sub_us": 27864.8,
+   "speedup": 1.0005
+  },
+  "verify 32": {
+   "base_us": 36458.9,
+   "sub_us": 36435.0,
+   "speedup": 1.0007
+  }
+ },
+ "speedup": 0.6102,
+ "total_s": 356.2,
+ "submission": "/Users/rayyanscomputer/okc-campaign/problems/muse_moe_w4a16/candidates/v4d_repack.py",
+ "tag": "v4d_repack"
+}

@@ -29,3 +29,6 @@ date	problem	tag	ok	speedup	note
 2026-10-25T06:25	muse_bf16_proj	v5_cuda_skinny	ok	1.0991	DISCARD: CUDA skinny GEMM not picked over cuBLAS at m 8..32 either; diagnosing kernel GPU time with a forced variant
 2026-10-25T06:35	muse_moe_w4a16	v4c_bn32_s8	ok	0.4181	DISCARD: WORSE than v4b (gemm1 140us vs 89): more blocks/deeper pipeline did not help, so not memory latency; need ncu
 2026-10-25T07:05	muse_attention_decode	v7_onelaunch	ok	1.1996	DISCARD: single launch = same 12.8us on sliding b1 as 3 launches; cost is the serial dependency chain (seqlen->page->kv->partial->combine), not launches
+2026-10-25T07:30	muse_attention_decode	v8_window	ok	0.7919	DISCARD: unsplit window kernel 34us vs 12.6 (17 serial tiles; Triton did not pipeline the gathers); keep v6
+2026-10-25T07:30	muse_bf16_proj	v6_cuda_8warps	ok	1.1047	DISCARD: 8 K-split warps still not picked over cuBLAS; CUDA skinny GEMM parked
+2026-10-25T07:30	muse_moe_w4a16	v4d_repack	ok	0.6102	DISCARD: 8 rows/warp + repack no faster (175us bs1); ncu says latency/occupancy bound -> split-K across blocks next
