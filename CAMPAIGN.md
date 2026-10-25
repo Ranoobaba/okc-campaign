@@ -109,3 +109,5 @@ Cheap remaining items: layer launch cuts, Marlin block-size tuning per shape, re
   x1.2603, submitting. Our 64-row kernel stays behind FA3 on verify full shapes even with 2400 programs (0.36 to 0.92x).
 - 10:10 PDT: decode_layer v8 REAL x1.2312 (#499). Board: proj #849 1.107, attention #541 1.282, moe #634 1.263,
   layer #499 1.231. Overall #554/1106 (started the day at #1019 after the first entry).
+- Note: ledger timestamps written between "07:35" and "10:10" PDT above ran ~1.5 h ahead of the wall clock (the
+  agent estimated time from the wakeup schedule); the real time at the layer v8 verdict was 08:35 PDT.
