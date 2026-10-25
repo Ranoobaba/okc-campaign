@@ -32,3 +32,4 @@ date	problem	tag	ok	speedup	note
 2026-10-25T07:30	muse_attention_decode	v8_window	ok	0.7919	DISCARD: unsplit window kernel 34us vs 12.6 (17 serial tiles; Triton did not pipeline the gathers); keep v6
 2026-10-25T07:30	muse_bf16_proj	v6_cuda_8warps	ok	1.1047	DISCARD: 8 K-split warps still not picked over cuBLAS; CUDA skinny GEMM parked
 2026-10-25T07:30	muse_moe_w4a16	v4d_repack	ok	0.6102	DISCARD: 8 rows/warp + repack no faster (175us bs1); ncu says latency/occupancy bound -> split-K across blocks next
+2026-10-25T07:50	muse_moe_w4a16	v4e_splitk	ok	0.6809	split-K 4: bs1 175->107us (still > Marlin 87); bs16/32 unchanged. Next: Marlin-style contiguous tile repack (32 rows x 32B per chunk strided 2KB today = poor DRAM efficiency) + cheap e4m3->bf16 scale cvt
