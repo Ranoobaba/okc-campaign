@@ -111,3 +111,12 @@ Cheap remaining items: layer launch cuts, Marlin block-size tuning per shape, re
   layer #499 1.231. Overall #554/1106 (started the day at #1019 after the first entry).
 - Note: ledger timestamps written between "07:35" and "10:10" PDT above ran ~1.5 h ahead of the wall clock (the
   agent estimated time from the wakeup schedule); the real time at the layer v8 verdict was 08:35 PDT.
+
+## 2026-10-25 10:00 PDT: loop paused (night campaign complete)
+
+Final real-judge standings for the night: proj 1.107 (#849), attention 1.282 (#541), moe 1.263 (#634),
+decode_layer 1.231 (#499); overall #555/1109 with all four decode boards solved (first entry was #1019 at 04:00).
+57 experiments on the replica, 10 scored submissions, ~$30 of Modal. Every cheap lever was measured
+(results.tsv); the open ceilings and the concrete next bets are in LEARNINGS.md. Restart the loop with /loop
+after choosing a bet: (a) CUDA decode attention for full-context shapes (3x off roofline for everyone),
+(b) sub-2-instruction/weight NVFP4 dequant to beat Marlin, (c) layer-level fusion to halve the ~20 launches.
