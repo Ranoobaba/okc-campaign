@@ -1,0 +1,28 @@
+[
+ {
+  "bs": 4,
+  "sharding": "ep8",
+  "seed": 7001
+ },
+ {
+  "bs": 33,
+  "sharding": "ep8",
+  "seed": 7002
+ },
+ {
+  "bs": 257,
+  "sharding": "ep8",
+  "seed": 7003
+ },
+ {
+  "bs": 128,
+  "sharding": "ep8",
+  "dist": "skewed",
+  "seed": 7004
+ },
+ {
+  "bs": 1,
+  "sharding": "ep8",
+  "seed": 7005
+ }
+]

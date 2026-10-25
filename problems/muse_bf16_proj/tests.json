@@ -1,0 +1,50 @@
+[
+ {
+  "m": 1,
+  "layer": "qkv_gate",
+  "seed": 7001
+ },
+ {
+  "m": 7,
+  "layer": "pooler",
+  "seed": 7002
+ },
+ {
+  "m": 33,
+  "layer": "o",
+  "seed": 7003
+ },
+ {
+  "m": 130,
+  "layer": "unpooler",
+  "seed": 7004
+ },
+ {
+  "m": 5,
+  "layer": "unpooler",
+  "seed": 7005
+ },
+ {
+  "m": 8,
+  "layer": "router",
+  "seed": 7006
+ },
+ {
+  "m": 9,
+  "layer": "router",
+  "dist": "outliers",
+  "seed": 7007
+ },
+ {
+  "m": 512,
+  "layer": "qkv_gate",
+  "dist": "outliers",
+  "seed": 7008
+ },
+ {
+  "m": 1000,
+  "layer": "unpooler",
+  "dist": "outliers",
+  "seed": 7009
+ }
+]

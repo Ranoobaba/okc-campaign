@@ -1,0 +1,22 @@
+{
+ "problem": "muse_attention_decode",
+ "gpu": "NVIDIA H200",
+ "torch": "2.14.1+cu130",
+ "tests": [
+  {
+   "case": "batch 1, ctx 10, heads tp8, layer sliding",
+   "ok": false,
+   "msg": "new key cache entries: relative L2 error 1.321e+00 > 0.08",
+   "s": 23.9
+  }
+ ],
+ "shapes": [],
+ "ok": false,
+ "prepare_s": {
+  "baseline": 0.0,
+  "submission": 0.0
+ },
+ "error": "test failed: batch 1, ctx 10, heads tp8, layer sliding: new key cache entries: relative L2 error 1.321e+00 > 0.08",
+ "submission": "problems/muse_attention_decode/baseline.py",
+ "tag": "calib_baseline"
+}

@@ -1,0 +1,65 @@
+{
+ "page": {
+  "title": "Routed experts",
+  "short": "MoE",
+  "summary": "Top-8 of 256 experts at width 4096: SwiGLU, NVFP4 weights, and a norm on each expert\u2019s output before it is weighted and summed.",
+  "computation": "# per token: its top 8 of 256 experts; only local ones here\nfor t, (e, g) in routes if e is local:\n    h = x[t] @ dequant(w13[e]).T\n    gate, up = split(h)\n    y = (silu(gate) * up) @ dequant(w2[e]).T\n    out[t] += g * rmsnorm(y * (1 + post_norm_w))",
+  "signature": "kernel_fn(data: Inputs, state)",
+  "returns": "bfloat16 [M, H]",
+  "shape_notes": [
+   "bs (M in the shapes) is the tokens per step: 1, 16 and 32 for decode, and 8, 128 and 256 for 8-token verify blocks. The weights arrive once, in prepare(), untimed.",
+   "This GPU holds 32 of the 256 experts, as under 8-way expert parallelism. Every token arrives, and only its routes to local experts are computed.",
+   "Routings follow real routers\u2019 skewed expert popularity. A step waits for the busiest GPU, so each routing makes this GPU the busiest.",
+   "Decode loads are SGLang serving with speculative decoding off; verify loads are its default recipe, which checks each request's 8-token draft in one step."
+  ],
+  "correctness": [
+   "The output, against an FP32 reference: at most 1.5%."
+  ]
+ },
+ "benchmarks": [
+  {
+   "bs": 1,
+   "sharding": "ep8",
+   "load": "decode 1",
+   "weight": 60,
+   "seed": 401
+  },
+  {
+   "bs": 16,
+   "sharding": "ep8",
+   "load": "decode 16",
+   "weight": 60,
+   "seed": 402
+  },
+  {
+   "bs": 32,
+   "sharding": "ep8",
+   "load": "decode 32",
+   "weight": 60,
+   "seed": 403
+  },
+  {
+   "bs": 8,
+   "sharding": "ep8",
+   "load": "verify 1",
+   "weight": 60,
+   "seed": 404
+  },
+  {
+   "bs": 128,
+   "sharding": "ep8",
+   "load": "verify 16",
+   "weight": 60,
+   "seed": 405
+  },
+  {
+   "bs": 256,
+   "sharding": "ep8",
+   "load": "verify 32",
+   "weight": 60,
+   "seed": 406
+  }
+ ],
+ "sglang_us": 13448.5,
+ "sglang_per": "decode step"
+}

@@ -1,0 +1,42 @@
+[
+ {
+  "batch": 1,
+  "ctx": 0,
+  "layer": "sliding",
+  "q_len": 300,
+  "page": 1,
+  "seed": 7001
+ },
+ {
+  "batch": 1,
+  "ctx": 3000,
+  "layer": "full",
+  "q_len": 753,
+  "page": 1,
+  "seed": 7002
+ },
+ {
+  "batch": 2,
+  "ctx": 2500,
+  "layer": "sliding",
+  "q_len": 753,
+  "page": 1,
+  "seed": 7003
+ },
+ {
+  "batch": 3,
+  "ctx": 5000,
+  "layer": "full",
+  "q_len": 200,
+  "dist": "outliers",
+  "seed": 7004
+ },
+ {
+  "batch": 1,
+  "ctx": 4096,
+  "layer": "sliding",
+  "q_len": 4096,
+  "page": 1,
+  "seed": 7005
+ }
+]
