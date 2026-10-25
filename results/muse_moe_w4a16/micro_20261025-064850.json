@@ -1,0 +1,87 @@
+{
+ "v3b_asis": {
+  "decode 32 | bs 32, sharding ep8": {
+   "us": 267.69599318504333,
+   "speedup": 0.9951587478918466,
+   "check": "OK relative L2 error 5.506e-03 (worst row 5.739e-03)"
+  },
+  "verify 16 | bs 128, sharding ep8": {
+   "us": 414.08000886440277,
+   "speedup": 1.001661482316441,
+   "check": "OK relative L2 error 5.510e-03 (worst row 5.906e-03)"
+  },
+  "verify 32 | bs 256, sharding ep8": {
+   "us": 599.0560054779053,
+   "speedup": 0.9974359464193395,
+   "check": "OK relative L2 error 5.509e-03 (worst row 5.950e-03)"
+  }
+ },
+ "block32_all": {
+  "decode 32 | bs 32, sharding ep8": {
+   "us": 340.94400703907013,
+   "speedup": 0.7813600001573402,
+   "check": "OK relative L2 error 5.506e-03 (worst row 5.739e-03)"
+  },
+  "verify 16 | bs 128, sharding ep8": {
+   "us": 354.3680012226105,
+   "speedup": 1.1704442671057356,
+   "check": "OK relative L2 error 5.511e-03 (worst row 5.906e-03)"
+  },
+  "verify 32 | bs 256, sharding ep8": {
+   "us": 446.79999351501465,
+   "speedup": 1.3373321451535873,
+   "check": "OK relative L2 error 5.509e-03 (worst row 5.950e-03)"
+  }
+ },
+ "block48_all": {
+  "decode 32 | bs 32, sharding ep8": {
+   "us": 418.88000071048737,
+   "speedup": 0.635981686740439,
+   "check": "OK relative L2 error 5.506e-03 (worst row 5.739e-03)"
+  },
+  "verify 16 | bs 128, sharding ep8": {
+   "us": 412.78399527072906,
+   "speedup": 1.0048063883985918,
+   "check": "OK relative L2 error 5.510e-03 (worst row 5.906e-03)"
+  },
+  "verify 32 | bs 256, sharding ep8": {
+   "us": 507.26398825645447,
+   "speedup": 1.1779270904599655,
+   "check": "OK relative L2 error 5.509e-03 (worst row 5.950e-03)"
+  }
+ },
+ "block16_all": {
+  "decode 32 | bs 32, sharding ep8": {
+   "us": 266.9920027256012,
+   "speedup": 0.9977827300972846,
+   "check": "OK relative L2 error 5.506e-03 (worst row 5.739e-03)"
+  },
+  "verify 16 | bs 128, sharding ep8": {
+   "us": 331.6799998283386,
+   "speedup": 1.2505064993107404,
+   "check": "OK relative L2 error 5.510e-03 (worst row 5.906e-03)"
+  },
+  "verify 32 | bs 256, sharding ep8": {
+   "us": 426.39999091625214,
+   "speedup": 1.4013133360957328,
+   "check": "OK relative L2 error 5.509e-03 (worst row 5.950e-03)"
+  }
+ },
+ "atomic_all": {
+  "decode 32 | bs 32, sharding ep8": {
+   "us": 266.7520046234131,
+   "speedup": 0.9986804401705697,
+   "check": "OK relative L2 error 5.853e-03 (worst row 6.090e-03)"
+  },
+  "verify 16 | bs 128, sharding ep8": {
+   "us": 416.83200001716614,
+   "speedup": 0.9950483539163058,
+   "check": "OK relative L2 error 5.734e-03 (worst row 6.095e-03)"
+  },
+  "verify 32 | bs 256, sharding ep8": {
+   "us": 600.1279950141907,
+   "speedup": 0.995654258335198,
+   "check": "OK relative L2 error 5.692e-03 (worst row 6.048e-03)"
+  }
+ }
+}

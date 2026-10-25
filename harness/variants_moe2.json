@@ -1,0 +1,7 @@
+{
+ "v3b_asis": [],
+ "block32_all": [["BLOCK_SIZE_M_CANDIDATES = (8, 16, 32, 48, 64)", "BLOCK_SIZE_M_CANDIDATES = (32,)"]],
+ "block48_all": [["BLOCK_SIZE_M_CANDIDATES = (8, 16, 32, 48, 64)", "BLOCK_SIZE_M_CANDIDATES = (48,)"]],
+ "block16_all": [["BLOCK_SIZE_M_CANDIDATES = (8, 16, 32, 48, 64)", "BLOCK_SIZE_M_CANDIDATES = (16,)"]],
+ "atomic_all": [["use_atomic_add=tiny,\n                  use_fp32_reduce=not tiny,", "use_atomic_add=True,\n                  use_fp32_reduce=False,"]]
+}
