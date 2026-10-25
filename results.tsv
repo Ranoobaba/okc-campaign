@@ -12,3 +12,5 @@ date	problem	tag	ok	speedup	note
 2026-10-25T06:50	muse_moe_w4a16	v3 REAL JUDGE	ok	1.1338	job 9c1b770f3b684916 CI [1.117,1.151]; replica 1.152
 2026-10-25T06:50	muse_decode_layer	v1_assembled	ok	0.5937	13/13 tests pass (integration correct); slow because of Triton moe v2; rebuild with moe v3
 2026-10-25T06:50	muse_moe_w4a16	v2b_directscale	ok	0.3527	DISCARD: duplicated scale loads worse than reshape; Triton dequant GEMM parked, CUDA needed
+2026-10-25T07:30	muse_attention_decode	v4_fused	ok	micro	prep fused into attn: no gain at 16 rows (15.5 vs 15.0 us), slower at 64 rows; discard
+2026-10-25T07:30	muse_attention_decode	v5_onelaunch	ok	micro	in-kernel combine via atomic counter: correct but slower (18 vs 15.5 sliding b1, 54 vs 32 full b1): serial combine + longer dependency chain; discard
