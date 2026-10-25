@@ -153,9 +153,10 @@ def run(problem: str, sub_src: str, tests: list, benches: list, opts: dict) -> d
             t0 = time.time()
             try:
                 data = gen(case, case.get("seed", 9000 + i))
-                out = call_sub(_clone_inputs(data))
+                d = _clone_inputs(data)  # the kernel writes the cache in place: check that same dict
+                out = call_sub(d)
                 torch.cuda.synchronize()
-                ok, msg = check(data, out)
+                ok, msg = check(d, out)
             except Exception:
                 ok, msg = False, "exception:\n" + traceback.format_exc()
             report["tests"].append({"case": name, "ok": bool(ok), "msg": msg, "s": round(time.time() - t0, 1)})
@@ -247,7 +248,7 @@ def run(problem: str, sub_src: str, tests: list, benches: list, opts: dict) -> d
                 acc.append(max(e0.elapsed_time(e1) * 1000 - fixed_us, 0.01))
             if r < check_reps:
                 try:
-                    ok, msg = check(fresh, out_s)
+                    ok, msg = check(static_s, out_s)  # static_s holds the fresh inputs plus the kernel's cache writes
                 except Exception:
                     ok, msg = False, "exception:\n" + traceback.format_exc()
                 if not ok:
