@@ -55,3 +55,4 @@ date	problem	tag	ok	speedup	note
 2026-10-25T08:40	muse_attention_decode	v12 REAL JUDGE	ok	1.2464	job dbe56f1082214984 CI [1.228,1.272]; replica 1.2705
 2026-10-25T08:50	muse_decode_layer	v7_attn12	ok	1.2470	KEEP (within noise of v6 1.2411; decode-16/32 full up to 1.20/1.15); submitting
 2026-10-25T09:05	muse_decode_layer	v7 REAL JUDGE	ok	1.2113	job 29dc7a726e1448b0 CI [1.193,1.229]; v6 (1.2196) stays the board row
+2026-10-25T09:15	muse_attention_decode	sweep micro_attn5	ok	micro	full layers batch>=8: 2400 programs cap 128 best (b16 1.28x, b32 1.30x); 4800 same; 9600 worse; batch 1 unaffected
