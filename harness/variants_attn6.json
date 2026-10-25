@@ -1,0 +1,5 @@
+{
+ "v13_fa3_for_64rows": [],
+ "ours64_p2400": [["    if L * (HQ // HKV) > 16 and not window:\n        return _fa3_path(data)", "    if False:\n        return _fa3_path(data)"], ["    programs = 2400 if (not window and batch >= 8) else 300\n", "    programs = 2400 if (not window) else 300\n"]],
+ "ours64_p4800_bn32": [["    if L * (HQ // HKV) > 16 and not window:\n        return _fa3_path(data)", "    if False:\n        return _fa3_path(data)"], ["    programs = 2400 if (not window and batch >= 8) else 300\n", "    programs = 4800 if (not window) else 300\n"], ["    block_n = 128 if block_q <= 16 else 64\n    max_len = table.shape[1] * page\n    chunk, nsplit = _plan(B, HKV, max_len, window, L, block_n)", "    block_n = 128 if block_q <= 16 else 32\n    max_len = table.shape[1] * page\n    chunk, nsplit = _plan(B, HKV, max_len, window, L, block_n)"]]
+}

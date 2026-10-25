@@ -57,3 +57,4 @@ date	problem	tag	ok	speedup	note
 2026-10-25T09:05	muse_decode_layer	v7 REAL JUDGE	ok	1.2113	job 29dc7a726e1448b0 CI [1.193,1.229]; v6 (1.2196) stays the board row
 2026-10-25T09:15	muse_attention_decode	sweep micro_attn5	ok	micro	full layers batch>=8: 2400 programs cap 128 best (b16 1.28x, b32 1.30x); 4800 same; 9600 worse; batch 1 unaffected
 2026-10-25T09:30	muse_attention_decode	v13_p2400	ok	1.3034	KEEP: 2400 programs on full layers at batch>=8: b16 full 1.28x, b32 full 1.30x; 16/16 tests; submitting
+2026-10-25T09:40	muse_attention_decode	sweep micro_attn6	ok	micro	our 64-row kernel at 2400/4800 programs still 0.36-0.92x of FA3 on verify full shapes; FA3 fallback stays
