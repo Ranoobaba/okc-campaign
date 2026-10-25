@@ -50,3 +50,12 @@ Targets: all four decode boards entered; overall top 50 (serving priority); then
   Replica predicted 1.1019: calibration holds.
 - moe v2 (vectorized loads): correct, x0.40 (175 us at bs 1 vs 85). Profiling the bs=1 shape to see gemm1/gemm2/finalize split.
 - decode_layer v1 assembled (proj + attention + moe components + SGLang fused norms); first replica run in flight.
+
+## 2026-10-25 06:50 PT: two boards entered
+
+- moe v3 (Marlin + fused finalize) REAL JUDGE x1.1338 [1.117, 1.151] (job 9c1b770f3b684916). Replica said 1.152.
+- decode_layer v1 assembled from components: 13/13 tests pass. Speed 0.59 only because it carried the slow Triton
+  MoE; rebuilding with moe v3. Attention component still v2 (sliding 1.3 to 1.9x, verify full 0.3 to 0.7x).
+- Triton NVFP4 dequant GEMM parked: v2 0.40x, v2b 0.35x. ALU-bound dequant; the path to beat Marlin at small M is a
+  CUDA kernel with lop3/prmt dequant and mma.sync, or a smarter lossless repack.
+- Attention diagnostics running: 8-variant microbench on verify/decode shapes; v4 fuses prep into the attention launch.
