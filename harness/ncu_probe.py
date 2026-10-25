@@ -45,7 +45,7 @@ def run(problem, sub_src, case, kernel_regex, sections):
     os.makedirs("/root/sub", exist_ok=True)
     open("/root/sub/submission.py", "w").write(sub_src)
     open("/root/sub/driver.py", "w").write(DRIVER)
-    cmd = ["ncu", "--profile-from-start", "off", "--kernel-name", f"regex:{kernel_regex}", "--launch-count", "4"]
+    cmd = ["ncu", "--clock-control", "none", "--profile-from-start", "off", "--kernel-name", f"regex:{kernel_regex}", "--launch-count", "4"]
     for s in sections:
         cmd += ["--section", s]
     cmd += ["python", "/root/sub/driver.py", problem, "/root/sub/submission.py", json.dumps(case)]

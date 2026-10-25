@@ -1,0 +1,34 @@
+{
+ "problem": "muse_attention_decode",
+ "gpu": "NVIDIA H200",
+ "torch": "2.14.1+cu130",
+ "tests": [
+  {
+   "case": "batch 1, ctx 10, heads tp8, layer sliding",
+   "ok": true,
+   "msg": "relative L2 error 2.432e-02 (worst row 2.432e-02) [bound 0.076: 2.5 x the reference's 0.024 with FP8 E4M3 queries + 0.015]",
+   "s": 3.6
+  },
+  {
+   "case": "batch 3, ctx 2047, heads tp8, layer sliding",
+   "ok": true,
+   "msg": "relative L2 error 7.873e-02 (worst row 9.393e-02) [bound 0.150: 2.5 x the reference's 0.079 with FP8 E4M3 queries + 0.015]",
+   "s": 2.2
+  },
+  {
+   "case": "batch 5, ctx 5000, heads tp8, layer sliding, q_len 8, spread mixed, page 1",
+   "ok": false,
+   "msg": "exception:\nTraceback (most recent call last):\n  File \"/root/judge.py\", line 157, in run\n    out = call_sub(d)\n          ^^^^^^^^^^^\n  File \"/root/judge.py\", line 131, in call_sub\n    return sub.kernel_fn(data, sub_state) if n_params >= 2 else sub.kernel_fn(data)\n                                                                ^^^^^^^^^^^^^^^^^^^\n  File \"/root/sub/submission.py\", line 508, in kernel_fn\n    _attn[(B, HKV, nsplit)](q_scratch, k_cache, v_cache, table, data[\"cache_seqlens\"], data[\"k_scale\"], data[\"v_scale\"],\n  File \"/opt/sglang/lib/python3.12/site-packages/triton/runtime/jit.py\", line 374, in <lambda>\n    return lambda *args, **kwargs: self.run(grid=grid, warmup=False, *args, **kwargs)\n                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/sglang/lib/python3.12/site-packages/triton/runtime/jit.py\", line 757, in run\n    kernel = self._do_compile(key, signature, device, constexprs, options, attrs, warmup)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/sglang/lib/python3.12/site-packages/triton/runtime/jit.py\", line 902, in _do_compile\n    kernel = self.compile(src, target=target, options=options.__dict__)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/sglang/lib/python3.12/site-packages/triton/compiler/compiler.py\", line 307, in compile\n    module = src.make_ir(target, options, codegen_fns, module_map, context)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/sglang/lib/python3.12/site-packages/triton/compiler/compiler.py\", line 80, in make_ir\n    return ast_to_ttir(self.fn, self, context=context, options=options, codegen_fns=codegen_fns,\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ntriton.compiler.errors.CompilationError: at 66:25:\n        vptr = vc_ptr + rows[:, None] * (HKV * D) + h * D + d[None, :]\n        v = tl.load(vptr, mask=kmask[:, None], other=0.0)\n        acc = acc * alpha[:, None] + tl.dot(p.to(tl.bfloat16), v.to(tl.bfloat16))\n        m_i = m_new\n    if SCALED:\n        acc = acc * tl.load(v_scale_ptr)\n    tl.store(pm_ptr + pbase + r, m_i)\n    tl.store(pl_ptr + pbase + r, l_i)\n    tl.store(po_ptr + (pbase + r)[:, None] * D + d[None, :], acc)\n    # The last split to finish for this (request, kv head) merges every split and writes the output.\n    tl.debug_barrier()\n    prev = tl.atomic_add(counter_ptr + b * HKV + h, 1, sem=\"acq_rel\", scope=\"gpu\")\n                         ^\nNameError('counter_ptr is not defined')\n",
+   "s": 0.3
+  }
+ ],
+ "shapes": [],
+ "ok": false,
+ "prepare_s": {
+  "baseline": 0.0,
+  "submission": 0.0
+ },
+ "error": "test failed: batch 5, ctx 5000, heads tp8, layer sliding, q_len 8, spread mixed, page 1: exception:\nTraceback (most recent call last):\n  File \"/root/judge.py\", line 157, in run\n    out = call_sub(d)\n          ^^^^^^^^^^^\n  File \"/root/judge.py\", line 131, in call_sub\n    return sub.kernel_fn(data, sub_state) if n_params >= 2 else sub.kernel_fn(data)\n                                                                ^^^^^^^^^^^^^^^^^^^\n  File \"/root/sub/submission.py\", line 508, in kernel_fn\n    _attn[(B, HKV, nsplit)](q_scratch, k_cache, v_cache, table, data[\"cache_seqlens\"], data[\"k_scale\"], data[\"v_scale\"],\n  File \"/opt/sglang/lib/python3.12/site-packages/triton/runtime/jit.py\", line 374, in <lambda>\n    return lambda *args, **kwargs: self.run(grid=grid, warmup=False, *args, **kwargs)\n                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/sglang/lib/python3.12/site-packages/triton/runtime/jit.py\", line 757, in run\n    kernel = self._do_compile(key, signature, device, constexprs, options, attrs, warmup)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/sglang/lib/python3.12/site-packages/triton/runtime/jit.py\", line 902, in _do_compile\n    kernel = self.compile(src, target=target, options=options.__dict__)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/sglang/lib/python3.12/site-packages/triton/compiler/compiler.py\", line 307, in compile\n    module = src.make_ir(target, options, codegen_fns, module_map, context)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/sglang/lib/python3.12/site-packages/triton/compiler/compiler.py\", line 80, in make_ir\n    return ast_to_ttir(self.fn, self, context=context, options=options, codegen_fns=codegen_fns,\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ntriton.compiler.errors.CompilationError: at 66:25:\n        vptr = vc_ptr + rows[:, None] * (HKV * D) + h * D + d[None, :]\n        v = tl.load(vptr, mask=kmask[:, None], other=0.0)\n        acc = acc * alpha[:, None] + tl.dot(p.to(tl.bfloat16), v.to(tl.bfloat16))\n        m_i = m_new\n    if SCALED:\n        acc = acc * tl.load(v_scale_ptr)\n    tl.store(pm_ptr + pbase + r, m_i)\n    tl.store(pl_ptr + pbase + r, l_i)\n    tl.store(po_ptr + (pbase + r)[:, None] * D + d[None, :], acc)\n    # The last split to finish for this (request, kv head) merges every split and writes the output.\n    tl.debug_barrier()\n    prev = tl.atomic_add(counter_ptr + b * HKV + h, 1, sem=\"acq_rel\", scope=\"gpu\")\n                         ^\nNameError('counter_ptr is not defined')\n",
+ "submission": "/Users/rayyanscomputer/okc-campaign/problems/muse_attention_decode/candidates/v7_onelaunch_unrolled.py",
+ "tag": "v7_onelaunch"
+}
