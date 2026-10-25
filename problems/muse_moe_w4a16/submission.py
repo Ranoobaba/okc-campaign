@@ -85,14 +85,16 @@ def _experts_marlin(x, local_ids, topk_weights, bank, ws, top_k):
     for block_size_m in BLOCK_SIZE_M_CANDIDATES:
         if num_tokens * top_k / count / block_size_m < 0.9:
             break
+    block_size_m = max(block_size_m, 16) if num_tokens >= 16 else block_size_m  # measured: 16 beats 8 at bs 16
     sorted_ids, block_experts, n_padded = moe_align_block_size(local_ids, block_size_m, count)
     cache2 = torch.empty((num_tokens * top_k, size_n), device=x.device, dtype=x.dtype)
     cache13 = torch.empty((num_tokens * top_k * max(gemm1_n, size_k),), device=x.device, dtype=x.dtype)
     cache1 = cache13[: num_tokens * top_k * gemm1_n].view(-1, gemm1_n)
     cache3 = cache13[: num_tokens * top_k * size_k].view(-1, size_k)
+    tiny = num_tokens <= 8  # measured: atomic adds beat the fp32 reduce pass at bs 1 to 8
     common = dict(moe_block_size=block_size_m, mul_topk_weights=False, is_ep=True,
-                  b_q_type=scalar_types.float4_e2m1f, is_k_full=True, use_atomic_add=False,
-                  use_fp32_reduce=True, is_zp_float=False)
+                  b_q_type=scalar_types.float4_e2m1f, is_k_full=True, use_atomic_add=tiny,
+                  use_fp32_reduce=not tiny, is_zp_float=False)
     cache1 = moe_wna16_marlin_gemm(
         x, cache1, bank["w13"], None, bank["w13_s"], bank["w13_gs"], None, None, None, ws,
         sorted_ids, block_experts, n_padded, topk_weights, top_k=top_k,
